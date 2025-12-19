@@ -10,7 +10,7 @@
  {[**Project**]}     Rocket
  {[**File**]}        ////
  {[**Author**]}      Ashien the Skyfox
- {[**Version**]}     4.2.1
+ {[**Version**]}     4.2.4
  {[**Date**]}        2025-11-20
  {[**Python**]}      3.11.x
  {[**License**]}     MIT
