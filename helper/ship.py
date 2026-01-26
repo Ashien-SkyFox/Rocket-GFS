@@ -228,7 +228,7 @@ class Ship:
 
                 self.ship = pygame.transform.rotate(self.ship_orginal, self.rotate_angle) # Rotating the ship image based on the rotate angle
             else:
-                if self.collision_side == "top correct way up":
+                if self.collision_side == "top correct way up on Start":
                     self.rotate_angle %= 360  # Keep the angle within (0, 360) to prevent overflow
                     if self.rotate_angle < 1 or self.rotate_angle > 359:
                         self.rotate_velocity = 0
