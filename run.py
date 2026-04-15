@@ -10,8 +10,8 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        run.py
 #  {[**Author**]}      Ashien the Skyfox
-#  {[**Version**]}     4.2.4
-#  {[**Date**]}        2025-11-20
+#  {[**Version**]}     5.0.0
+#  {[**Date**]}        2026-04-15
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -34,6 +34,15 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#   -v5.0.0 Collision End check and start of refactoring.
+#       - Checks if player is at the endpoint and ending the game.
+#       - Started refactoring the code for better readability and maintainability.
+#       - Refactored the game loop into a separate function for better organization.
+#       - Refactored the collision handling logic for better clarity and separation of concerns.
+#       - Added comments and documentation for better understanding of the code.
+#
+# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #   -v4.2.1: Collision Color chek update.
 #       - Added ability to chek the overlapping pixel for collor
@@ -204,7 +213,7 @@ vector = conf.vector
 ### Game Loop ###
 
 def game_loop():
-    pygame.display.set_caption("Rocket - v4.2.4") # Setting the window title
+    pygame.display.set_caption("Rocket - v5.0.0") # Setting the window title
     pygame.init()
 
     map_selected = 0 # 0 = main menu, -1 = map loaded
@@ -267,26 +276,30 @@ def game_loop():
                     ship_instance.import_surface(screen) # Importing the collision surface to the ship instance for pixel color detection
                     ship_instance.update_thruster_inputs() # Update thruster inputs based on key presses
                     ship_instance.ship_rotate() # Update ship movement based on thruster inputs
-                    ship_instance.move_ship(spirit_collision_group) # Move the ship based on current velocity and acceleration
+                    text_to_show, reason = ship_instance.move_ship(spirit_collision_group) # Move the ship based on current velocity and acceleration
                     ship_instance.render_ship_maps() # Render the ship with updated rotation
                     game_state = ship_instance.check_game_state() # Check for game over or level completion
                     ship, ship_rect = ship_instance.get_rect() # Getting the ship image and rect for rendering
                     ship_instance.debug() # Starting the debug
                     screen.blit(ship, ship_rect) # Drawing the ship on the screen at the center position
-                elif game_state == "game over":
-                    spirit_collision_group = map_instance.draw_map(screen, position) # Drawing the map on the screen
-                    screen.blit(ship, ship_rect) # Drawing the ship on the screen at the center position    
-                    font = pygame.font.SysFont(None, 74) # Creating a font object for rendering text
-                    game_over_text = font.render("Game Over!", True, (255, 0, 255)) # Rendering the game over text
-                    screen.blit(game_over_text, (screensize_x // 2 - game_over_text.get_width() // 2, screensize_y // 2 - game_over_text.get_height() // 2)) # Blit the game over text to the screen
-                    pygame.display.flip() # Updating the display to show the new frame
-                    pygame.time.delay(1000) # Delay for a second before resetting
-                    screen.fill((0, 0, 0)) # Filling the screen with black color to clear previous frame
-                    map_selected = 0 # Returning to main menu
-                    map = 0 # Resetting map variable
-                    reset_ship = True # Resetting the ship
-                    main_menu_instance.main_menu_reset() # Resetting the main menu instance
-                    
+                    if text_to_show is not None:
+                        font = pygame.font.SysFont(None, 74) # Creating a font object for rendering text
+                        if reason is not None and reason == "Countdown Win":
+                            text_to_show_font = font.render(text_to_show, True, (255, 0, 255))
+                            screen.blit(text_to_show_font, (screensize_x // 2 - text_to_show_font.get_width() // 2, screensize_y // 2 - text_to_show_font.get_height() // 2)) # Blits the needed text
+                        else:
+                            text_to_show_font = font.render(text_to_show, True, (255, 0, 255))
+                            screen.blit(text_to_show_font, (screensize_x // 2 - text_to_show_font.get_width() // 2, screensize_y // 2 - text_to_show_font.get_height() // 2)) # Blits the needed text
+                            pygame.display.flip() # Updating the display to show the new frame
+                            pygame.time.delay(1000) # Delay for a second before resetting
+                            if game_state == "game over" or "Win":
+                                screen.fill((0, 0, 0)) # Filling the screen with black color to clear previous frame
+                                map_selected = 0 # Returning to main menu
+                                map = 0 # Resetting map variable
+                                reset_ship = True # Resetting the ship
+                                main_menu_instance.main_menu_reset() # Resetting the main menu instance
+                            else:
+                                print("ERROR")
                     """
                     Do i remember how the heck that even worked :/
                         Probably not :D
@@ -298,6 +311,8 @@ def game_loop():
                     -v4.0.4
                     Kinda work on it in like v4.2.0. but still do't remember how it works anyway
                     -v4.2.2
+                    Well I started Refactoring
+                    -v4.2.5
                     """
 
             # -------------------------------------------------------------------------------- #

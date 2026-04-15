@@ -10,8 +10,8 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        ship.py
 #  {[**Author**]}      Ashien the Skyfox
-#  {[**Version**]}     4.2.4
-#  {[**Date**]}        2025-11-20
+#  {[**Version**]}     5.0.0
+#  {[**Date**]}        2026-04-15
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -22,6 +22,11 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#   -v5.0.0 Collision End check and start of refactoring.
+#       - Checks if player is at the endpoint and ending the game.
+#
+# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #   -v4.2.1: Collision Color chek update.
 #       - Added ability to chek the overlapping pixel for collor
@@ -176,6 +181,9 @@ class Ship:
             self.movement_lock = False
             self.gravity_lock = False
             self.rotation_lock = False
+            
+            # Other
+            self.won_countdown_start = True
 
         def create_ship_image(self):
             self.ship_orginal = pygame.image.load('pictures/Rocket.png').convert_alpha()
@@ -228,7 +236,7 @@ class Ship:
 
                 self.ship = pygame.transform.rotate(self.ship_orginal, self.rotate_angle) # Rotating the ship image based on the rotate angle
             else:
-                if self.collision_side == "top correct way up on Start":
+                if self.collision_side == "top correct way up on Start" or "top correct way up on End": # Only update rotation if collision is on top and ship is upright
                     self.rotate_angle %= 360  # Keep the angle within (0, 360) to prevent overflow
                     if self.rotate_angle < 1 or self.rotate_angle > 359:
                         self.rotate_velocity = 0
@@ -269,7 +277,7 @@ class Ship:
             # Update velocity and position
             self.velocity += self.acceleration_vector # Update velocity based on acceleration
             self.velocity *= 0.98  # Apply velocity damping for realism
-            self.check_collisions(sprite_group) # Check for collisions with the map
+            text_to_show, reason = self.check_collisions(sprite_group) # Check for collisions with the map
             if self.gravity_lock == False: # Only apply gravity if not locked by collision
                 self.temp_movement += self.gravity # Apply gravity to temporary movement
                 if self.speedx_fade_fast == True: # Apply fast horizontal speed fade on collision
@@ -279,6 +287,8 @@ class Ship:
                         self.speedx_fade_fast = False # Disable fast fade once horizontal speed is negligible
             self.temp_position += self.velocity + self.temp_movement # Temporary position calculation
             self.position = self.temp_position # Update position based on velocity
+            print(text_to_show, reason)
+            return text_to_show, reason
             
             
         def get_ship_position(self):
@@ -294,6 +304,23 @@ class Ship:
 
         def get_overlap_pixel_color(self, x, y): # getting the color the pixel the ship is overlapping with
             self.overlap_pixel_color = pygame.Surface.get_at(self.surface, (x, y)) # Getting the color of the pixel at the specified coordinates
+
+        def won_countdown(self):
+            if self.won_countdown_start:
+                start_time = pygame.time.get_ticks() # Get the current time in milliseconds
+                countdown_duration = 3000 # Duration of the countdown in milliseconds (e.g., 3000ms = 3 seconds)
+                self.countdown_active = True # Flag to indicate that the countdown is active
+                self.end_countdown_tick = start_time + countdown_duration # Calculate the time when the countdown should end
+                self.won_countdown_start = False
+            while self.countdown_active:
+                if pygame.time.get_ticks() >= self.end_countdown_tick:
+                    self.countdown_active = False
+                    print("Trigger Win")
+                    self.game_state = "Win"
+                    return "You Win!", "win"
+                elif pygame.time.get_ticks() <= self.end_countdown_tick:
+                    self.sec_till_win_remaining = (self.end_countdown_tick - pygame.time.get_ticks()) // 1000 # Calculate the remaining seconds until win
+                    return f"Win in {self.sec_till_win_remaining} s", "Countdown Win"
 
         def check_collisions(self, sprite_group):
             ship_mask = pygame.mask.from_surface(self.ship) # Create a mask for the ship
@@ -312,13 +339,15 @@ class Ship:
                             self.get_overlap_pixel_color(collision_point[0] + ship_rect.x, collision_point[1] + ship_rect.y) # Get the color of the overlapping pixel
                             if self.overlap_pixel_color == (0, 255, 233, 255): # Check if overlapping with Start point color
                                 self.collision_side = "top correct way up on Start" # Collision is on top and ship is upright on Start
+                            elif self.overlap_pixel_color == (255, 0, 229, 255): # Check if overlapping with End point color
+                                self.collision_side = "top correct way up on End" # Collision is on top and ship is upright on End
                         # Handle collision based on side
                     
                     # Collision response
                     print(f"Collision detected on {self.collision_side} side with {touched_tiles} touched tiles.")
                     match self.collision_side:
                         case "You where not suposed to do that":
-                            self.game_over() # Trigger game over no collision not top
+                            return self.game_over() # Trigger game over no collision not top
 
                         case "top correct way up on Start":
                             self.position.y -= self.collision_move_upward # Move ship upward on top collision
@@ -328,7 +357,17 @@ class Ship:
                             self.rotation_lock = True # Setting the rotation lock to true on top collision
                             self.prev_collision_count = 0 # Resetting the previous collision count on collision
                             self.speedx_fade_fast = True # Enabling fast horizontal speed fade on collision
-                            pass
+                            return None, "start"
+
+                        case "top correct way up on End":
+                            self.position.y -= self.collision_move_upward # Move ship upward on top collision
+                            if self.velocity.y < 0 and self.total_thrust == 0 and self.prev_collision_count != 0:
+                                self.velocity.y = 0 # Stopping downward velocity on top collision
+                            self.gravity_lock = True # Setting the gravity lock to true on top collision
+                            self.rotation_lock = True # Setting the rotation lock to true on top collision
+                            self.prev_collision_count = 0 # Resetting the previous collision count on collision
+                            self.speedx_fade_fast = True # Enabling fast horizontal speed fade on collision
+                            return self.won_countdown() # Starting the win countdown
 
             if not collision_point:
                 self.prev_collision_count += 1 # Incrementing the previous collision count if no collision detected
@@ -337,10 +376,13 @@ class Ship:
                     self.movement_lock = False # Releasing the movement lock after locktime
                     self.gravity_lock = False # Releasing the gravity lock after locktime
                     self.rotation_lock = False # Releasing the rotation lock after locktime
+                self.won_countdown_start = True # Resetting the win countdown start flag when not colliding
+                return None, None
 
         def game_over(self):
             print("Game Over triggered")
             self.game_state = "game over" # Setting the game state to game over
+            return "Game Over", "fail"
 
         def check_game_state(self):
             return self.game_state

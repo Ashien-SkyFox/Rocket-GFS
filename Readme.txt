@@ -10,8 +10,8 @@
  {[**Project**]}     Rocket
  {[**File**]}        ////
  {[**Author**]}      Ashien the Skyfox
- {[**Version**]}     4.2.4
- {[**Date**]}        2025-11-20
+ {[**Version**]}     5.0.0
+ {[**Date**]}        2026-04-15
  {[**Python**]}      3.11.x
  {[**License**]}     MIT
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -35,8 +35,17 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  {[**Changelog**]}
 
-  -v4.2.1: Collision Color chek update.
-      - Added ability to chek the overlapping pixel for collor
+  -v5.0.0 Collision End check and start of refactoring.
+      - Checks if player is at the endpoint and ending the game.
+      - Started refactoring the code for better readability and maintainability.
+      - Refactored the game loop into a separate function for better organization.
+      - Refactored the collision handling logic for better clarity and separation of concerns.
+      - Added comments and documentation for better understanding of the code.
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+  -v4.2.5 Collision End check
+      - Checks if player is at the endpoint and ending the game.
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
