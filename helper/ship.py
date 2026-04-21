@@ -419,15 +419,15 @@ class Ship:
                         else:
                             self.collision_unsafe_side_count += overlap_area
 
-            # Pick the collision result with the largest overlap so mixed contacts still resolve predictably.
+            # Unsafe overlap always wins over safe overlap on start and finish tiles.
             self.total_collision_count = self.collision_start_side_count + self.collision_unsafe_side_count + self.collision_end_side_count # Total collision count is the sum of all collision counts
             if self.total_collision_count != 0: # Only determine the collision side if there is at least one collision to prevent division by zero
-                collision_counts = {
-                    "You where not suposed to do that": self.collision_unsafe_side_count,
-                    "on Start": self.collision_start_side_count,
-                    "on End": self.collision_end_side_count,
-                }
-                self.collision_side = max(collision_counts, key=collision_counts.get)
+                if self.collision_unsafe_side_count > 0:
+                    self.collision_side = "You where not suposed to do that"
+                elif self.collision_end_side_count > 0:
+                    self.collision_side = "on End"
+                elif self.collision_start_side_count > 0:
+                    self.collision_side = "on Start"
 
                 # Collision response
             if self.debug_enabled:
