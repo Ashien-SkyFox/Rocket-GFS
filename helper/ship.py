@@ -10,7 +10,7 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        ship.py
 #  {[**Author**]}      Ashien the Skyfox
-#  {[**Version**]}     5.0.0
+#  {[**Version**]}     5.0.1
 #  {[**Date**]}        2026-04-15
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
@@ -22,6 +22,17 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#   -v5.0.1: Collision End check and start of refactoring.
+#       - Checks if player is at the endpoint and ending the game.
+#       - Refactored the collision code to be easier to read and maintain.
+#       - Reused cached masks for the ship and tiles to reduce collision overhead.
+#       - Limited start and finish color checks to the actual overlap area for better performance.
+#       - Restored color-based safe and unsafe landing zones on the start and finish tiles.
+#       - Reset the finish countdown correctly when leaving the finish tile.
+#       - Added comments to document the optimized collision path.
+#
+# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #   -v5.0.0 Collision End check and start of refactoring.
 #       - Checks if player is at the endpoint and ending the game.
@@ -61,7 +72,8 @@
 
 ### Import Operating System Module (nessesary to load files)###
 import os # Importing the os library for file path operations
-import sys # Import sys to modify the Python path
+import sys
+from turtle import color # Import sys to modify the Python path
 
 
 # Move to main directory and ensure parent directory is in sys.path
@@ -181,6 +193,16 @@ class Ship:
             self.movement_lock = False
             self.gravity_lock = False
             self.rotation_lock = False
+            self.unsave_color = conf.unsafe_color
+            self.start_point_color = conf.start_point_color
+            self.end_point_color = conf.end_point_color
+            self.debug_enabled = getattr(conf, 'debug_mode', False)
+            self.ship_mask = None
+            self.total_collision_count = 0
+            self.collision_start_side_count = 0
+            self.collision_unsafe_side_count = 0
+            self.collision_end_side_count = 0
+            self.collision_side = None
             
             # Other
             self.won_countdown_start = True
@@ -194,6 +216,7 @@ class Ship:
             ships_size = ((0.1 * screensize_x) + (0.1 * screensize_y)) / 2 # Calculating the ship size based on screen size
             self.ship_orginal = pygame.transform.scale(self.ship_orginal, (ships_size, ships_size)) # Scaling the ship image based on screen size
             self.ship = self.ship_orginal # Initializing the ship image
+            self.ship_mask = pygame.mask.from_surface(self.ship)
         
         def render_ship_maps(self):
             self.ship_rect = self.ship.get_rect(center = ((0.5 * screensize_x), (0.5 * screensize_y))) # Getting the rect of the ship image to center it on the screen
@@ -235,8 +258,9 @@ class Ship:
                 self.rotate_angle += self.rotate_velocity # Updating the rotate angle based on the rotate velocity
 
                 self.ship = pygame.transform.rotate(self.ship_orginal, self.rotate_angle) # Rotating the ship image based on the rotate angle
+                self.ship_mask = pygame.mask.from_surface(self.ship)
             else:
-                if self.collision_side == "top correct way up on Start" or "top correct way up on End": # Only update rotation if collision is on top and ship is upright
+                if self.collision_side in ("on Start", "on End"): # Only update rotation if collision is on top and ship is upright
                     self.rotate_angle %= 360  # Keep the angle within (0, 360) to prevent overflow
                     if self.rotate_angle < 1 or self.rotate_angle > 359:
                         self.rotate_velocity = 0
@@ -249,6 +273,7 @@ class Ship:
 
                     self.rotate_angle += self.rotate_velocity # Updating the rotate angle based on the rotate velocity
                     self.ship = pygame.transform.rotate(self.ship_orginal, self.rotate_angle) # Rotating the ship image based on the rotate angle
+                    self.ship_mask = pygame.mask.from_surface(self.ship)
 
         def move_ship(self, sprite_group):
             # Calculate forward direction based on current rotation
@@ -287,7 +312,8 @@ class Ship:
                         self.speedx_fade_fast = False # Disable fast fade once horizontal speed is negligible
             self.temp_position += self.velocity + self.temp_movement # Temporary position calculation
             self.position = self.temp_position # Update position based on velocity
-            print(text_to_show, reason)
+            if self.debug_enabled:
+                print(text_to_show, reason)
             return text_to_show, reason
             
             
@@ -302,9 +328,6 @@ class Ship:
             self.surface = None # clear the surface variable
             self.surface = surface # Importing the surface to get pixel color from
 
-        def get_overlap_pixel_color(self, x, y): # getting the color the pixel the ship is overlapping with
-            self.overlap_pixel_color = pygame.Surface.get_at(self.surface, (x, y)) # Getting the color of the pixel at the specified coordinates
-
         def won_countdown(self):
             if self.won_countdown_start:
                 start_time = pygame.time.get_ticks() # Get the current time in milliseconds
@@ -312,6 +335,7 @@ class Ship:
                 self.countdown_active = True # Flag to indicate that the countdown is active
                 self.end_countdown_tick = start_time + countdown_duration # Calculate the time when the countdown should end
                 self.won_countdown_start = False
+
             while self.countdown_active:
                 if pygame.time.get_ticks() >= self.end_countdown_tick:
                     self.countdown_active = False
@@ -322,65 +346,140 @@ class Ship:
                     self.sec_till_win_remaining = (self.end_countdown_tick - pygame.time.get_ticks()) // 1000 # Calculate the remaining seconds until win
                     return f"Win in {self.sec_till_win_remaining} s", "Countdown Win"
 
+        def reset_won_countdown(self):
+            self.won_countdown_start = True
+            self.countdown_active = False
+
+        def count_collision_colors(self, ship_rect, ship_mask, sprite, sprite_mask):
+            overlap_rect = ship_rect.clip(sprite.rect)
+            start_count = 0
+            unsafe_count = 0
+            end_count = 0
+
+            for x in range(overlap_rect.left, overlap_rect.right):
+                for y in range(overlap_rect.top, overlap_rect.bottom):
+                    ship_local = (x - ship_rect.left, y - ship_rect.top)
+                    sprite_local = (x - sprite.rect.left, y - sprite.rect.top)
+                    if not ship_mask.get_at(ship_local) or not sprite_mask.get_at(sprite_local):
+                        continue
+
+                    overlap_pixel_color = sprite.image.get_at(sprite_local)
+                    if overlap_pixel_color == self.start_point_color:
+                        start_count += 1
+                    elif overlap_pixel_color == self.end_point_color:
+                        end_count += 1
+                    elif overlap_pixel_color == self.unsave_color:
+                        unsafe_count += 1
+
+            return start_count, unsafe_count, end_count
+
         def check_collisions(self, sprite_group):
-            ship_mask = pygame.mask.from_surface(self.ship) # Create a mask for the ship
+            ship_mask = self.ship_mask or pygame.mask.from_surface(self.ship) # Create a mask for the ship
             ship_rect = self.ship.get_rect(center = ((0.5 * screensize_x), (0.5 * screensize_y))) # Getting the rect of the ship image to center it on the screen
+            
+            self.collision_start_side_count = 0 # Counter for collisions on the start side
+            self.collision_unsafe_side_count = 0 # Counter for collisions on the unsafe side
+            self.collision_end_side_count = 0 # Counter for collisions on the end side
+            self.collision_side = None # Variable to store the determined collision side based on the count of each side
+            touched_tiles = 0
 
             for sprite in sprite_group:
+                if not ship_rect.colliderect(sprite.rect):
+                    continue
+
                 offset = (int(sprite.rect.x - ship_rect.x), int(sprite.rect.y - ship_rect.y)) # Calculate offset between ship and sprite
-                sprite_mask = pygame.mask.from_surface(sprite.image) # Create a mask for the sprite
-                collision_point = ship_mask.overlap(sprite_mask, offset) # Check for overlap
-                touched_tiles = pygame.mask.Mask.overlap_area(ship_mask, sprite_mask, offset) # Get the area of overlap
-                if collision_point:
-                    # Determine collision side
-                    self.collision_side = "You where not suposed to do that" # Default to not top collision
-                    if collision_point[1] > ship_mask.get_size()[1] * 0.7: # Check if collision is on the top side of a tile
-                        if (abs(self.rotate_angle) <= self.collision_angle_limit or abs(360 - self.rotate_angle) <= (self.collision_angle_limit)) or abs(self.rotate_angle) == 0: # Check if ship is upright within angle limit
-                            self.get_overlap_pixel_color(collision_point[0] + ship_rect.x, collision_point[1] + ship_rect.y) # Get the color of the overlapping pixel
-                            if self.overlap_pixel_color == (0, 255, 233, 255): # Check if overlapping with Start point color
-                                self.collision_side = "top correct way up on Start" # Collision is on top and ship is upright on Start
-                            elif self.overlap_pixel_color == (255, 0, 229, 255): # Check if overlapping with End point color
-                                self.collision_side = "top correct way up on End" # Collision is on top and ship is upright on End
-                        # Handle collision based on side
+                sprite_mask = sprite.mask # Reuse the cached mask for the sprite
+                collision_point = ship_mask.overlap(sprite_mask, offset) # Check for overlap point
+                overlap_area = ship_mask.overlap_area(sprite_mask, offset) # Get the area of overlap
+                if collision_point is None or overlap_area <= 0:
+                    continue
+
+                touched_tiles += overlap_area
+                # Start/end only count as safe when the ship is landing from above and is nearly upright.
+                landing_on_top = collision_point[1] > ship_mask.get_size()[1] * 0.7
+                upright_enough = (abs(self.rotate_angle) <= self.collision_angle_limit or abs(360 - self.rotate_angle) <= self.collision_angle_limit)
+                match sprite.tile_type:
+                    case 1:
+                        self.collision_unsafe_side_count += overlap_area
+                    case 2:
+                        if landing_on_top and upright_enough:
+                            # Start tiles contain both safe and unsafe colors, so keep the cheap mask test
+                            # and only do per-pixel color counting inside the real overlap area.
+                            start_count, unsafe_count, _ = self.count_collision_colors(ship_rect, ship_mask, sprite, sprite_mask)
+                            self.collision_start_side_count += start_count
+                            self.collision_unsafe_side_count += unsafe_count
+                        else:
+                            self.collision_unsafe_side_count += overlap_area
+                    case 3:
+                        if landing_on_top and upright_enough:
+                            # Finish tiles use the same split safe/unsafe layout as the start tile.
+                            _, unsafe_count, end_count = self.count_collision_colors(ship_rect, ship_mask, sprite, sprite_mask)
+                            self.collision_end_side_count += end_count
+                            self.collision_unsafe_side_count += unsafe_count
+                        else:
+                            self.collision_unsafe_side_count += overlap_area
+
+            # Pick the collision result with the largest overlap so mixed contacts still resolve predictably.
+            self.total_collision_count = self.collision_start_side_count + self.collision_unsafe_side_count + self.collision_end_side_count # Total collision count is the sum of all collision counts
+            if self.total_collision_count != 0: # Only determine the collision side if there is at least one collision to prevent division by zero
+                collision_counts = {
+                    "You where not suposed to do that": self.collision_unsafe_side_count,
+                    "on Start": self.collision_start_side_count,
+                    "on End": self.collision_end_side_count,
+                }
+                self.collision_side = max(collision_counts, key=collision_counts.get)
+
+                # Collision response
+            if self.debug_enabled:
+                print(f"Collision detected on {self.collision_side} side with {touched_tiles} touched tiles.")
+            match self.collision_side:
+                case "You where not suposed to do that":
+                    if self.debug_enabled:
+                        print("Collided with unsafe area")
+                    return self.game_over() # Trigger game over no collision not top
+
+                case "on Start":
+                    if self.debug_enabled:
+                        print("Collided with start point")
+                    self.reset_won_countdown()
+                    if self.velocity.y < 0 and self.total_thrust == 0:
+                        self.velocity.y = 0 # Stopping downward velocity on top collision
+                        self.position.y -= self.collision_move_upward # Move ship upward on top collision
+                    self.gravity_lock = True # Setting the gravity lock to true on top collision
+                    self.rotation_lock = True # Setting the rotation lock to true on top collision
+                    if self.prev_collision_count == 0:
+                        self.position.y -= self.collision_move_upward # Move ship upward on top collision
+                    self.prev_collision_count = 1 # Incrementing the previous collision count to determine if the ship is already colliding in the next frame
+                    self.speedx_fade_fast = True # Enabling fast horizontal speed fade on collision
+                    return None, "start"
+
+                case "on End":
+                    if self.debug_enabled:
+                        print("Collided with end point")
+                    if self.velocity.y < 0 and self.total_thrust == 0:
+                        self.velocity.y = 0 # Stopping downward velocity on top collision
+                        self.position.y -= self.collision_move_upward # Move ship upward on top collision
+                    self.gravity_lock = True # Setting the gravity lock to true on top collision
+                    self.rotation_lock = True # Setting the rotation lock to true on top collision
+                    if self.prev_collision_count == 0:
+                        self.position.y -= self.collision_move_upward # Move ship upward on top collision
+                    self.prev_collision_count = 1 # Incrementing the previous collision count to determine if the ship is already colliding in the next frame
+                    self.speedx_fade_fast = True # Enabling fast horizontal speed fade on collision
+                    return self.won_countdown() # Trigger win countdown on end collision
                     
-                    # Collision response
-                    print(f"Collision detected on {self.collision_side} side with {touched_tiles} touched tiles.")
-                    match self.collision_side:
-                        case "You where not suposed to do that":
-                            return self.game_over() # Trigger game over no collision not top
-
-                        case "top correct way up on Start":
-                            self.position.y -= self.collision_move_upward # Move ship upward on top collision
-                            if self.velocity.y < 0 and self.total_thrust == 0 and self.prev_collision_count != 0:
-                                self.velocity.y = 0 # Stopping downward velocity on top collision
-                            self.gravity_lock = True # Setting the gravity lock to true on top collision
-                            self.rotation_lock = True # Setting the rotation lock to true on top collision
-                            self.prev_collision_count = 0 # Resetting the previous collision count on collision
-                            self.speedx_fade_fast = True # Enabling fast horizontal speed fade on collision
-                            return None, "start"
-
-                        case "top correct way up on End":
-                            self.position.y -= self.collision_move_upward # Move ship upward on top collision
-                            if self.velocity.y < 0 and self.total_thrust == 0 and self.prev_collision_count != 0:
-                                self.velocity.y = 0 # Stopping downward velocity on top collision
-                            self.gravity_lock = True # Setting the gravity lock to true on top collision
-                            self.rotation_lock = True # Setting the rotation lock to true on top collision
-                            self.prev_collision_count = 0 # Resetting the previous collision count on collision
-                            self.speedx_fade_fast = True # Enabling fast horizontal speed fade on collision
-                            return self.won_countdown() # Starting the win countdown
-
-            if not collision_point:
-                self.prev_collision_count += 1 # Incrementing the previous collision count if no collision detected
-                pygame.time.delay(1) # Adding a small delay to prevent too fast increments
-                if self.prev_collision_count >= self.locktime:
-                    self.movement_lock = False # Releasing the movement lock after locktime
-                    self.gravity_lock = False # Releasing the gravity lock after locktime
-                    self.rotation_lock = False # Releasing the rotation lock after locktime
-                self.won_countdown_start = True # Resetting the win countdown start flag when not colliding
-                return None, None
+                case None:
+                    if self.debug_enabled:
+                        print("No collision detected.")
+                    self.reset_won_countdown()
+                    self.gravity_lock = False # Releasing gravity lock if there is no collision
+                    self.rotation_lock = False # Releasing rotation lock if there is no collision
+                    self.prev_collision_count = 0 # Resetting the previous collision count if there is no collision
+                    self.speedx_fade_fast = False # Disabling fast horizontal speed fade if there is no collision
+                    return None, None
 
         def game_over(self):
-            print("Game Over triggered")
+            if self.debug_enabled:
+                print("Game Over triggered")
             self.game_state = "game over" # Setting the game state to game over
             return "Game Over", "fail"
 
@@ -410,7 +509,11 @@ class Ship:
                 "gravity_lock": self.gravity_lock,
                 "rotation_lock": self.rotation_lock,
                 "movement_lock": self.movement_lock,
-                "collion_color ": self.overlap_pixel_color              
+                "speedx_fade_fast": self.speedx_fade_fast,
+                "collision_total_count": self.total_collision_count if hasattr(self, 'total_collision_count') else "N/A",
+                "collision_start_side_count": self.collision_start_side_count if hasattr(self, 'collision_start_side_count') else "N/A",
+                "collision_end_side_count": self.collision_end_side_count if hasattr(self, 'collision_end_side_count') else "N/A",
+                "collision_unsafe_side_count": self.collision_unsafe_side_count if hasattr(self, 'collision_unsafe_side_count') else "N/A"
                 }
             for argument, value in debug_values.items():
                 print(f"{argument}: {value}")

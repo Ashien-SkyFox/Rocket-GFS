@@ -10,7 +10,7 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        run.py
 #  {[**Author**]}      Ashien the Skyfox
-#  {[**Version**]}     5.0.0
+#  {[**Version**]}     5.0.1
 #  {[**Date**]}        2026-04-15
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
@@ -34,6 +34,17 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#   -v5.0.1: Collision End check and start of refactoring.
+#       - Checks if player is at the endpoint and ending the game.
+#       - Refactored the collision code to be easier to read and maintain.
+#       - Reused cached masks for the ship and tiles to reduce collision overhead.
+#       - Limited start and finish color checks to the actual overlap area for better performance.
+#       - Restored color-based safe and unsafe landing zones on the start and finish tiles.
+#       - Reset the finish countdown correctly when leaving the finish tile.
+#       - Added comments to document the optimized collision path.
+#
+# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #   -v5.0.0 Collision End check and start of refactoring.
 #       - Checks if player is at the endpoint and ending the game.
@@ -213,7 +224,7 @@ vector = conf.vector
 ### Game Loop ###
 
 def game_loop():
-    pygame.display.set_caption("Rocket - v5.0.0") # Setting the window title
+    pygame.display.set_caption("Rocket - v5.0.1") # Setting the window title
     pygame.init()
 
     map_selected = 0 # 0 = main menu, -1 = map loaded
@@ -280,7 +291,8 @@ def game_loop():
                     ship_instance.render_ship_maps() # Render the ship with updated rotation
                     game_state = ship_instance.check_game_state() # Check for game over or level completion
                     ship, ship_rect = ship_instance.get_rect() # Getting the ship image and rect for rendering
-                    ship_instance.debug() # Starting the debug
+                    if conf.debug_mode:
+                        ship_instance.debug() # Starting the debug
                     screen.blit(ship, ship_rect) # Drawing the ship on the screen at the center position
                     if text_to_show is not None:
                         font = pygame.font.SysFont(None, 74) # Creating a font object for rendering text

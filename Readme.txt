@@ -10,7 +10,7 @@
  {[**Project**]}     Rocket
  {[**File**]}        ////
  {[**Author**]}      Ashien the Skyfox
- {[**Version**]}     5.0.0
+ {[**Version**]}     5.0.1
  {[**Date**]}        2026-04-15
  {[**Python**]}      3.11.x
  {[**License**]}     MIT
@@ -34,6 +34,17 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  {[**Changelog**]}
+
+  -v5.0.1: Collision End check and start of refactoring.
+      - Checks if player is at the endpoint and ending the game.
+      - Refactored the collision code to be easier to read and maintain.
+      - Reused cached masks for the ship and tiles to reduce collision overhead.
+      - Limited start and finish color checks to the actual overlap area for better performance.
+      - Restored color-based safe and unsafe landing zones on the start and finish tiles.
+      - Reset the finish countdown correctly when leaving the finish tile.
+      - Added comments to document the optimized collision path.
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
   -v5.0.0 Collision End check and start of refactoring.
       - Checks if player is at the endpoint and ending the game.

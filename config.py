@@ -10,7 +10,7 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        config.py
 #  {[**Author**]}      Ashien the Skyfox
-#  {[**Version**]}     4.2.4
+#  {[**Version**]}     5.0.1
 #  {[**Date**]}        2025-11-20
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
@@ -22,6 +22,17 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#   -v5.0.1: Collision End check and start of refactoring.
+#       - Checks if player is at the endpoint and ending the game.
+#       - Refactored the collision code to be easier to read and maintain.
+#       - Reused cached masks for the ship and tiles to reduce collision overhead.
+#       - Limited start and finish color checks to the actual overlap area for better performance.
+#       - Restored color-based safe and unsafe landing zones on the start and finish tiles.
+#       - Reset the finish countdown correctly when leaving the finish tile.
+#       - Added comments to document the optimized collision path.
+#
+# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #   -v4.2.1: Collision Color chek update.
 #       - Added ability to chek the overlapping pixel for collor
@@ -63,7 +74,7 @@ vector = pygame.math.Vector2
 # screen size
 
 screensize_x = 1200
-screensize_y = 550
+screensize_y = 600
 """
 Problems: If you would want to change the screen size you would have to change it in multiple places or else the pictures would not be in the right place
 Fixed: I created variables for the screen size and used them in the code with multiplications
@@ -101,6 +112,15 @@ ship_collision_move_upward = 0.01
 ship_rotate_angle_collision = 45
 ship_rotate_to_ground_speed = 3
 ship_speedx_fade_fast_rate = 0.65
+
+# color checks
+unsafe_color = (255, 12, 0, 255) # red as unsave for walls
+start_point_color = (0, 255, 233, 255) # start point color representing the start point in the map
+end_point_color = (255, 0, 229, 255) # end point color representing the end point in the map
+valid_collision_colors = [unsafe_color, start_point_color, end_point_color]
+
+# Debug settings
+debug_mode = False
 
 ##########################################################
 ##########################################################

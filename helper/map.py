@@ -10,7 +10,7 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        map.py
 #  {[**Author**]}      Ashien the Skyfox
-#  {[**Version**]}     4.2.4
+#  {[**Version**]}     5.0.1
 #  {[**Date**]}        2025-11-20
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
@@ -22,6 +22,17 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#   -v5.0.1: Collision End check and start of refactoring.
+#       - Checks if player is at the endpoint and ending the game.
+#       - Refactored the collision code to be easier to read and maintain.
+#       - Reused cached masks for the ship and tiles to reduce collision overhead.
+#       - Limited start and finish color checks to the actual overlap area for better performance.
+#       - Restored color-based safe and unsafe landing zones on the start and finish tiles.
+#       - Reset the finish countdown correctly when leaving the finish tile.
+#       - Added comments to document the optimized collision path.
+#
+# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #   -v4.2.1: Collision Color chek update.
 #       - Added ability to chek the overlapping pixel for collor
@@ -137,6 +148,7 @@ class TileMap:
         def create_tiles(self):
             # Creating tile sprites based on map data
             self.scaled_tile_images = []
+            self.tile_sprites = []
             for row_index, row in enumerate(self.map_data): # Creating tile sprites based on map data
                 scaled_row = []
                 for col_index, tile_type in enumerate(row): # Iterating through each tile in the map
@@ -144,9 +156,19 @@ class TileMap:
                     if tile_image:
                         scaled_image = pygame.transform.scale(tile_image, self.tile_size) # Scale once and store
                         scaled_row.append(scaled_image)
+                        tile_sprite = pygame.sprite.Sprite() # Creating a sprite for the tile
+                        tile_sprite.image = scaled_image # Assigning the scaled image to the sprite
+                        tile_sprite.mask = pygame.mask.from_surface(scaled_image) # Creating a mask for pixel-perfect collision detection
+                        tile_sprite.tile_type = tile_type # Storing the tile type in the sprite for later use
+                        tile_sprite.grid_x = col_index * self.tile_spacing # Calculating the grid x position of the tile
+                        tile_sprite.grid_y = row_index * self.tile_spacing # Calculating the grid y position of the tile
+                        tile_sprite.rect = tile_sprite.image.get_rect(topleft=(tile_sprite.grid_x, tile_sprite.grid_y)) # Setting the rectangle of the sprite based on its grid position
+                        self.tile_sprites.append(tile_sprite) # Adding the tile sprite to the list of tile sprites
                     else:
                         scaled_row.append(None)
                 self.scaled_tile_images.append(scaled_row)
+
+            self.tile_group = pygame.sprite.Group(self.tile_sprites) # Creating a sprite group for all tile sprites for easy rendering and collision detection
 
         def draw_map(self, screen, ship_position):
             self.location.x = -ship_position.x + (0.5 * screensize_x)
@@ -163,19 +185,10 @@ class TileMap:
             return self.get_sprite_group(ship_position) # Return the group of tile sprites for collision detection
         
         def get_sprite_group(self, ship_position):
-            self.tile_group.empty() # Clear existing sprites
             offset_x = self.location.x
             offset_y = self.location.y
-            for row_index, row in enumerate(self.scaled_tile_images):
-                for col_index, tile_image in enumerate(row):
-                    if tile_image:
-                        x = col_index * self.tile_spacing + offset_x
-                        y = row_index * self.tile_spacing + offset_y
-                        """Create a sprite group for all tiles in the map. Useful for collision detection."""
-                        tile_sprite = pygame.sprite.Sprite() # Create a new sprite (for the collision detection of the single tile)
-                        tile_sprite.image = tile_image # Set the tile image
-                        tile_sprite.rect = tile_sprite.image.get_rect(topleft=(x, y)) # Set the rectangle of the sprite
-                        self.tile_group.add(tile_sprite) # Add the sprite to the group
+            for tile_sprite in self.tile_sprites:
+                tile_sprite.rect.topleft = (tile_sprite.grid_x + offset_x, tile_sprite.grid_y + offset_y)
 
             return self.tile_group # Return the group of tile sprites for collision detection
         
