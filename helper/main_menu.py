@@ -9,7 +9,7 @@
 # ================================================================================================================================================================================================================
 #  {[**Project**]}     Rocket
 #  {[**File**]}        main_menu.py
-#  {[**Author**]}      Ashien the Skyfox
+#  {[**Author**]}      Cutie Ashien
 #  {[**Version**]}     4.2.4
 #  {[**Date**]}        2025-11-20
 #  {[**Python**]}      3.11.x
@@ -51,7 +51,7 @@
 # easily navigate through it and understand its structure and functionality.
 # Enjoy coding! :3
 # ================================================================================================================================================================================================================
-# Written by Ashien the Skyfox (https://github.com/Ashien-SkyFox)
+# Written by Cutie Ashien (https://github.com/Ashien-SkyFox)
 ##################################################################################################################################################################################################################
 
 ### Import Operating System Module (nessesary to load files)###
@@ -96,7 +96,7 @@ class MainMenu:
             self.highscore = highscore
             self.window = "main_menu" # Setting the initial window to main menu
             self.font = pygame.font.Font(None, 36) # Creating a font object for rendering text
-            self.map_info = levels.get_level_info()  # Get level names from levels.py
+            self.map_info, self.objective_level = levels.get_level_info()  # Get level names and objectives from levels.py
             self.center_x = screensize_x // 2
             self.center_y = screensize_y // 2
             self.level_count = len(self.map_info)  # Get the number of available levels

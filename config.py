@@ -9,9 +9,9 @@
 # ================================================================================================================================================================================================================
 #  {[**Project**]}     Rocket
 #  {[**File**]}        config.py
-#  {[**Author**]}      Ashien the Skyfox
-#  {[**Version**]}     5.0.1
-#  {[**Date**]}        2025-11-20
+#  {[**Author**]}      Cutie Ashien
+#  {[**Version**]}     5.1.0
+#  {[**Date**]}        2025-11-22
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -22,6 +22,15 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#   -v5.1.0: Objective system add.
+#       - Added an objective system to the game, allowing for different objectives to be defined and tracked during gameplay.
+#       - Implemented an Objective class to represent individual objectives and their states.
+#       - Updated the game loop to check for objective completion and update the game state accordingly.
+#       - Added functionality to display objective information on the screen during gameplay.
+#       - Updated the level design to include specific objectives for each level.
+#
+# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #   -v5.0.1: Collision End check and start of refactoring.
 #       - Checks if player is at the endpoint and ending the game.
@@ -62,7 +71,7 @@
 # easily navigate through it and understand its structure and functionality.
 # Enjoy coding! :3
 # ================================================================================================================================================================================================================
-# Written by Ashien the Skyfox (https://github.com/Ashien-SkyFox)
+# Written by Cutie Ashien (https://github.com/Ashien-SkyFox)
 ##################################################################################################################################################################################################################
 
 ### Library Imports ###
@@ -127,3 +136,12 @@ debug_mode = False
 
 map_sizing_factor = 0.3  # Sizing factor for the map tiles
 map_tile_size = (int((map_sizing_factor * screensize_x) + (map_sizing_factor * screensize_y)) / 2, int((map_sizing_factor * screensize_x) + (map_sizing_factor * screensize_y)) / 2) # Calculating the tile size based on screen size and sizing factor
+
+# -------------------------------------------------------------- #
+# Objective related
+# -------------------------------------------------------------- #
+# Objective kinds and allocated numbers for map creation
+objective_kinds = {
+    1: 'flyby',
+    2: 'stay'
+}

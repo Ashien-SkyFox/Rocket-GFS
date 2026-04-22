@@ -9,9 +9,9 @@
 # ================================================================================================================================================================================================================
 #  {[**Project**]}     Rocket
 #  {[**File**]}        map.py
-#  {[**Author**]}      Ashien the Skyfox
-#  {[**Version**]}     5.0.1
-#  {[**Date**]}        2025-11-20
+#  {[**Author**]}      Cutie Ashien
+#  {[**Version**]}     5.1.0
+#  {[**Date**]}        2025-11-22
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -22,6 +22,15 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#   -v5.1.0: Objective system add.
+#       - Added an objective system to the game, allowing for different objectives to be defined and tracked during gameplay.
+#       - Implemented an Objective class to represent individual objectives and their states.
+#       - Updated the game loop to check for objective completion and update the game state accordingly.
+#       - Added functionality to display objective information on the screen during gameplay.
+#       - Updated the level design to include specific objectives for each level.
+#
+# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #   -v5.0.1: Collision End check and start of refactoring.
 #       - Checks if player is at the endpoint and ending the game.
@@ -69,7 +78,7 @@
 # easily navigate through it and understand its structure and functionality.
 # Enjoy coding! :3
 # ================================================================================================================================================================================================================
-# Written by Ashien the Skyfox (https://github.com/Ashien-SkyFox)
+# Written by Cutie Ashien (https://github.com/Ashien-SkyFox)
 ##################################################################################################################################################################################################################
 
 ### Import Operating System Module (nessesary to load files)###
@@ -93,6 +102,7 @@ if main_dir not in sys.path:
 import levels as levels # Importing levels module
 import config as conf # Importing config module
 import helper.main_menu as mm # Importing map helper module
+import helper.objectives as objectives_helper # Importing objective helper module
 
 # ------------------------------------------------------------------------------ #
 
@@ -108,7 +118,7 @@ screensize_y = conf.screensize_y # Importing screen size y from config module
 
 ### TileMap Class ###
 class TileMap:
-        def __init__(self, map_data):
+        def __init__(self, map_data, objective_data):
             # Tile size and spacing
             self.sizing_factor = conf.map_sizing_factor  # Sizing factor for the map tiles
             self.tile_spacing = int(((self.sizing_factor * screensize_x) / 2) + ((self.sizing_factor * screensize_y) / 2))  # Calculating tile spacing based on screen size
@@ -118,7 +128,12 @@ class TileMap:
             self.wall_tile = pygame.image.load('pictures/tiles/Basic_wall.png').convert_alpha() # Loading tile images
             self.start_point_tile = pygame.image.load('pictures/tiles/Start_point.png').convert_alpha() # Loading tile images
             self.finish_point_tile = pygame.image.load('pictures/tiles/Finisch_point.png').convert_alpha() # Loading tile images
-
+            self.objective_tile = None
+            self.objective = None
+            self.objective_definition = objectives_helper.get_objective_definition(objective_data)
+            if self.objective_definition is not None:
+                self.objective_tile = pygame.image.load(self.objective_definition["tile_path"]).convert_alpha() # Loading tile image from objectives.py metadata
+                self.objective = self.objective_definition["kind"]
             # Others
             self.tile_start_rect = self.start_point_tile.get_rect() # Getting the rectangle of the start point tile
 
@@ -127,6 +142,7 @@ class TileMap:
             self.width = len(map_data[0]) * self.tile_size[0] # Calculating the width of the map based on the number of columns and tile size
             self.height = len(map_data) * self.tile_size[1] # Calculating the height of the map based on the number of rows and tile size
             self.tile_group = pygame.sprite.Group() # Group to hold all tile sprites
+            self.objective_instance = None
             self.create_tiles() # Creating the tile sprites
 
             
@@ -142,6 +158,11 @@ class TileMap:
                     return self.start_point_tile # Start point tile
                 case 3:
                     return self.finish_point_tile # Finish point tile
+                case 4:
+                    if self.objective_tile is not None:
+                        return self.objective_tile # Objective tile
+                    else:
+                        return None # No tile if objective tile is not set
                 case _:
                     return None # Empty tile
                     
@@ -163,6 +184,12 @@ class TileMap:
                         tile_sprite.grid_x = col_index * self.tile_spacing # Calculating the grid x position of the tile
                         tile_sprite.grid_y = row_index * self.tile_spacing # Calculating the grid y position of the tile
                         tile_sprite.rect = tile_sprite.image.get_rect(topleft=(tile_sprite.grid_x, tile_sprite.grid_y)) # Setting the rectangle of the sprite based on its grid position
+                        if tile_type == 4 and self.objective_definition is not None:
+                            self.objective_instance = objectives_helper.create_objective(
+                                self.objective_definition["kind"],
+                                (tile_sprite.grid_x, tile_sprite.grid_y),
+                                self.tile_size,
+                            )
                         self.tile_sprites.append(tile_sprite) # Adding the tile sprite to the list of tile sprites
                     else:
                         scaled_row.append(None)
@@ -189,9 +216,16 @@ class TileMap:
             offset_y = self.location.y
             for tile_sprite in self.tile_sprites:
                 tile_sprite.rect.topleft = (tile_sprite.grid_x + offset_x, tile_sprite.grid_y + offset_y)
+                if tile_sprite.tile_type == 4 and self.objective_instance is not None:
+                    self.objective_instance.set_position(tile_sprite.rect.topleft)
 
             return self.tile_group # Return the group of tile sprites for collision detection
         
+        def update_objective(self, ship_rect, delta_time):
+            if self.objective_instance is None:
+                return False
+            return self.objective_instance.update(ship_rect, delta_time)
+
         def get_type_of_tile_at_position(self, position):
             pass
         

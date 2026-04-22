@@ -9,9 +9,9 @@
 # ================================================================================================================================================================================================================
 #  {[**Project**]}     Rocket
 #  {[**File**]}        run.py
-#  {[**Author**]}      Ashien the Skyfox
-#  {[**Version**]}     5.0.1
-#  {[**Date**]}        2026-04-15
+#  {[**Author**]}      Cutie Ashien
+#  {[**Version**]}     5.1.0
+#  {[**Date**]}        2026-04-22
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -35,7 +35,16 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
 #
-#   -v5.0.1: Collision End check and start of refactoring.
+#   - v5.1.0: Objective system add.
+#       - Added an objective system to the game, allowing for different objectives to be defined and tracked during gameplay.
+#       - Implemented an Objective class to represent individual objectives and their states.
+#       - Updated the game loop to check for objective completion and update the game state accordingly.
+#       - Added functionality to display objective information on the screen during gameplay.
+#       - Updated the level design to include specific objectives for each level.
+#
+# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#
+#   - v5.0.1: Collision End check and start of refactoring.
 #       - Checks if player is at the endpoint and ending the game.
 #       - Refactored the collision code to be easier to read and maintain.
 #       - Reused cached masks for the ship and tiles to reduce collision overhead.
@@ -46,7 +55,7 @@
 #
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
-#   -v5.0.0 Collision End check and start of refactoring.
+#   - v5.0.0 Collision End check and start of refactoring.
 #       - Checks if player is at the endpoint and ending the game.
 #       - Started refactoring the code for better readability and maintainability.
 #       - Refactored the game loop into a separate function for better organization.
@@ -55,7 +64,7 @@
 #
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
-#   -v4.2.1: Collision Color chek update.
+#   - v4.2.1: Collision Color chek update.
 #       - Added ability to chek the overlapping pixel for collor
 #
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -186,7 +195,7 @@
 # easily navigate through it and understand its structure and functionality.
 # Enjoy coding! :3
 # ================================================================================================================================================================================================================
-# Written by Ashien the Skyfox (https://github.com/Ashien-SkyFox)
+# Written by Cutie Ashien (https://github.com/Ashien-SkyFox)
 ##################################################################################################################################################################################################################
 
 ### File Imports ###
@@ -195,6 +204,7 @@ import config as conf # Importing config module
 import helper.main_menu as mm # Importing map helper module
 import helper.ship as sh # Importing ship helper module
 import helper.map as mp # Importing map helper module
+import helper.objectives as obj # Importing objectives module
 
 # ------------------------------------------------------------------------------ #
 
@@ -224,7 +234,7 @@ vector = conf.vector
 ### Game Loop ###
 
 def game_loop():
-    pygame.display.set_caption("Rocket - v5.0.1") # Setting the window title
+    pygame.display.set_caption("Rocket - v5.1.0") # Setting the window title
     pygame.init()
 
     map_selected = 0 # 0 = main menu, -1 = map loaded
@@ -239,11 +249,12 @@ def game_loop():
     ship_orginal = ship_instance.create_ship_image()
     running = True
     reset_ship = False
+    delta_time = 0.0
 
     # -------------------------------------------------------------------------------- #
     # -------------------------------------------------------------------------------- #
 
-    def start_game_loop(running=running, map_selected=map_selected, reset_ship=reset_ship, ship_instance=ship_instance, ship_orginal=ship_orginal, main_menu_instance=main_menu_instance):
+    def start_game_loop(running=running, map_selected=map_selected, reset_ship=reset_ship, ship_instance=ship_instance, ship_orginal=ship_orginal, main_menu_instance=main_menu_instance, delta_time=delta_time):
         while running:
             for event in pygame.event.get(): # Quiting the game loop if the window is closed
                 if event.type == pygame.QUIT: 
@@ -267,9 +278,10 @@ def game_loop():
 
             if map_selected == 0:
                 map = main_menu_instance.main_menu_loop(screen) # Displaying the main menu
-                if map in range(1, len(levels.get_level_info())+1): # Checking if the selected map is valid
+                level_info, objective = levels.get_level_info()
+                if map in level_info: # Checking if the selected map is valid
                     main_menu_instance.map_loading_animation(screen) # Displaying the map loading animation
-                    map_instance = mp.TileMap(levels.grapp_level(map)) # Creating a tilemap instance based on the selected map
+                    map_instance = mp.TileMap(levels.grapp_level(map), objective[map]) # Creating a tilemap instance based on the selected map
                     ship, ship_rect = ship_instance.get_rect()
                     spawn_position = map_instance.get_location_of_spawn_point(ship_rect) # Getting the spawn position from the tilemap
                     ship_instance.position = spawn_position # Setting the ship position to the spawn position
@@ -291,6 +303,9 @@ def game_loop():
                     ship_instance.render_ship_maps() # Render the ship with updated rotation
                     game_state = ship_instance.check_game_state() # Check for game over or level completion
                     ship, ship_rect = ship_instance.get_rect() # Getting the ship image and rect for rendering
+                    objective_completed = map_instance.update_objective(ship_rect, delta_time)
+                    if objective_completed and conf.debug_mode:
+                        print("Objective complete")
                     if conf.debug_mode:
                         ship_instance.debug() # Starting the debug
                     screen.blit(ship, ship_rect) # Drawing the ship on the screen at the center position
@@ -331,7 +346,7 @@ def game_loop():
             # -------------------------------------------------------------------------------- #
             
             pygame.display.flip() # Updating the display to show the new frame
-            clock.tick(60) # Limiting the frame rate to 60 FPS
+            delta_time = clock.tick(60) / 1000.0 # Limiting the frame rate to 60 FPS and storing frame time
 
     # -------------------------------------------------------------------------------- #
     # -------------------------------------------------------------------------------- #

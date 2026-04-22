@@ -9,9 +9,9 @@
 # ================================================================================================================================================================================================================
 #  {[**Project**]}     Rocket
 #  {[**File**]}        ship.py
-#  {[**Author**]}      Ashien the Skyfox
-#  {[**Version**]}     5.0.1
-#  {[**Date**]}        2026-04-15
+#  {[**Author**]}      Cutie Ashien
+#  {[**Version**]}     5.1.0
+#  {[**Date**]}        2025-11-22
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -22,6 +22,15 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#   -v5.1.0: Objective system add.
+#       - Added an objective system to the game, allowing for different objectives to be defined and tracked during gameplay.
+#       - Implemented an Objective class to represent individual objectives and their states.
+#       - Updated the game loop to check for objective completion and update the game state accordingly.
+#       - Added functionality to display objective information on the screen during gameplay.
+#       - Updated the level design to include specific objectives for each level.
+#
+# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #   -v5.0.1: Collision End check and start of refactoring.
 #       - Checks if player is at the endpoint and ending the game.
@@ -67,7 +76,7 @@
 # easily navigate through it and understand its structure and functionality.
 # Enjoy coding! :3
 # ================================================================================================================================================================================================================
-# Written by Ashien the Skyfox (https://github.com/Ashien-SkyFox)
+# Written by Cutie Ashien (https://github.com/Ashien-SkyFox)
 ##################################################################################################################################################################################################################
 
 ### Import Operating System Module (nessesary to load files)###

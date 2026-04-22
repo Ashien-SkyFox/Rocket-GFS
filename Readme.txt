@@ -9,7 +9,7 @@
 ================================================================================================================================================================================================================
  {[**Project**]}     Rocket
  {[**File**]}        ////
- {[**Author**]}      Ashien the Skyfox
+ {[**Author**]}      Cutie Ashien
  {[**Version**]}     5.0.1
  {[**Date**]}        2026-04-15
  {[**Python**]}      3.11.x
@@ -33,9 +33,18 @@
      The code is designed to be modular and easy to understand, allowing for future enhancements and modifications or also for educational purposes.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
- {[**Changelog**]}
+ {[**Changelog**]} {[**Changelog**]}
 
-  -v5.0.1: Collision End check and start of refactoring.
+  - v5.1.0: Objective system add.
+      - Added an objective system to the game, allowing for different objectives to be defined and tracked during gameplay.
+      - Implemented an Objective class to represent individual objectives and their states.
+      - Updated the game loop to check for objective completion and update the game state accordingly.
+      - Added functionality to display objective information on the screen during gameplay.
+      - Updated the level design to include specific objectives for each level.
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+  - v5.0.1: Collision End check and start of refactoring.
       - Checks if player is at the endpoint and ending the game.
       - Refactored the collision code to be easier to read and maintain.
       - Reused cached masks for the ship and tiles to reduce collision overhead.
@@ -46,7 +55,7 @@
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-  -v5.0.0 Collision End check and start of refactoring.
+  - v5.0.0 Collision End check and start of refactoring.
       - Checks if player is at the endpoint and ending the game.
       - Started refactoring the code for better readability and maintainability.
       - Refactored the game loop into a separate function for better organization.
@@ -55,10 +64,11 @@
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-  -v4.2.5 Collision End check
-      - Checks if player is at the endpoint and ending the game.
+  - v4.2.1: Collision Color chek update.
+      - Added ability to chek the overlapping pixel for collor
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
   - v4.2.0: Collision update.
       - Implemented collision detection and handling in the ship movement logic.
@@ -186,5 +196,5 @@ The code is clearly labeled using comments so you can
 easily navigate through it and understand its structure and functionality.
 Enjoy coding! :3
 ================================================================================================================================================================================================================
-Written by Ashien the Skyfox (https://github.com/Ashien-SkyFox)
+Written by Cutie Ashien (https://github.com/Ashien-SkyFox)
 #################################################################################################################################################################################################################
