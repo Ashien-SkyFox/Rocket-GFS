@@ -13,7 +13,10 @@ TODO
     - Win condisions for stay and flyby or more Objectives.
     - Adding logic for win condition setting
     - preventing player form spawining inside tile if a tile is above start.
-
+    - Arrow to next objective/finish
+    - highscore
+    - new desinges
+    
 ================================================================================================================================================================================================================
 Written by Cutie Ashien (https://github.com/Ashien-SkyFox)
 #################################################################################################################################################################################################################
