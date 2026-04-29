@@ -10,7 +10,7 @@
  {[**Project**]}     Rocket
  {[**File**]}        ////
  {[**Author**]}      Cutie Ashien
- {[**Version**]}     5.0.1
+ {[**Version**]}     5.1.0
  {[**Date**]}        2026-04-15
  {[**Python**]}      3.11.x
  {[**License**]}     MIT
