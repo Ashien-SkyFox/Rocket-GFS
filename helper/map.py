@@ -10,8 +10,8 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        map.py
 #  {[**Author**]}      Cutie Ashien
-#  {[**Version**]}     5.1.0
-#  {[**Date**]}        2025-11-22
+#  {[**Version**]}     5.1.1
+#  {[**Date**]}        2026-04-29
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -22,6 +22,13 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#   - v5.1.1: Objective system update.
+#       - Fixed minor bugs in the objective system.
+#       - Improved objective tracking and display during gameplay.
+#       - Enhanced level design to better integrate objectives.
+#
+# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #   -v5.1.0: Objective system add.
 #       - Added an objective system to the game, allowing for different objectives to be defined and tracked during gameplay.
@@ -118,7 +125,8 @@ screensize_y = conf.screensize_y # Importing screen size y from config module
 
 ### TileMap Class ###
 class TileMap:
-        def __init__(self, map_data, objective_data):
+        def __init__(self, map_selected, objective_data, duration_data):
+            self.duration_data = duration_data
             # Tile size and spacing
             self.sizing_factor = conf.map_sizing_factor  # Sizing factor for the map tiles
             self.tile_spacing = int(((self.sizing_factor * screensize_x) / 2) + ((self.sizing_factor * screensize_y) / 2))  # Calculating tile spacing based on screen size
@@ -138,9 +146,9 @@ class TileMap:
             self.tile_start_rect = self.start_point_tile.get_rect() # Getting the rectangle of the start point tile
 
             # Store map data
-            self.map_data = map_data # Storing the map data
-            self.width = len(map_data[0]) * self.tile_size[0] # Calculating the width of the map based on the number of columns and tile size
-            self.height = len(map_data) * self.tile_size[1] # Calculating the height of the map based on the number of rows and tile size
+            self.map_data = levels.grapp_level(map_selected)
+            self.width = len(self.map_data[0]) * self.tile_size[0] # Calculating the width of the map based on the number of columns and tile size
+            self.height = len(self.map_data) * self.tile_size[1] # Calculating the height of the map based on the number of rows and tile size
             self.tile_group = pygame.sprite.Group() # Group to hold all tile sprites
             self.objective_instance = None
             self.create_tiles() # Creating the tile sprites

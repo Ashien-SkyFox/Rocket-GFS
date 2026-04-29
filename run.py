@@ -10,8 +10,8 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        run.py
 #  {[**Author**]}      Cutie Ashien
-#  {[**Version**]}     5.1.0
-#  {[**Date**]}        2026-04-22
+#  {[**Version**]}     5.1.1
+#  {[**Date**]}        2026-04-29
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -34,6 +34,13 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#   - v5.1.1: Objective system update.
+#       - Fixed minor bugs in the objective system.
+#       - Improved objective tracking and display during gameplay.
+#       - Enhanced level design to better integrate objectives.
+#
+# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #   - v5.1.0: Objective system add.
 #       - Added an objective system to the game, allowing for different objectives to be defined and tracked during gameplay.
@@ -278,10 +285,10 @@ def game_loop():
 
             if map_selected == 0:
                 map = main_menu_instance.main_menu_loop(screen) # Displaying the main menu
-                level_info, objective = levels.get_level_info()
-                if map in level_info: # Checking if the selected map is valid
+                map_data = levels.get_level_info()
+                if map in map_data[0]: # Checking if the selected map is valid
                     main_menu_instance.map_loading_animation(screen) # Displaying the map loading animation
-                    map_instance = mp.TileMap(levels.grapp_level(map), objective[map]) # Creating a tilemap instance based on the selected map
+                    map_instance = mp.TileMap(map, map_data[1][map], map_data[2][map]) # Creating a tilemap instance based on the selected map
                     ship, ship_rect = ship_instance.get_rect()
                     spawn_position = map_instance.get_location_of_spawn_point(ship_rect) # Getting the spawn position from the tilemap
                     ship_instance.position = spawn_position # Setting the ship position to the spawn position
