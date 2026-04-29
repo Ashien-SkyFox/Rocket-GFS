@@ -351,6 +351,8 @@ def game_loop():
                     -v4.2.2
                     Well I started Refactoring
                     -v4.2.5
+                    Well refactored some parts and now know how its working again
+                    -v5.1.2
                     """
 
             # -------------------------------------------------------------------------------- #
