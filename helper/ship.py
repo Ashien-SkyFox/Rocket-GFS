@@ -140,7 +140,8 @@ class Ship:
         def __init__(self):
             ##########################################################
             ##########################################################
-
+            self.create_ship_image() # Create the ship image and mask for collision detection
+            
             ##### Ajustable Favtors #####
             # Importing Thruster key bindings from config.py
             self.thruster_key_outer_left = conf.ship_thruster_key_outer_left

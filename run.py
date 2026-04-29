@@ -10,7 +10,7 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        run.py
 #  {[**Author**]}      Cutie Ashien
-#  {[**Version**]}     5.1.1
+#  {[**Version**]}     5.1.2
 #  {[**Date**]}        2026-04-29
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
@@ -34,6 +34,11 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#   - v5.1.2: Objective system update.
+#       - Fixed minor bugs in the objective system.
+#
+# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #   - v5.1.1: Objective system update.
 #       - Fixed minor bugs in the objective system.
@@ -251,17 +256,17 @@ def game_loop():
     # -------------------------------------------------------------------------------- #
     # -------------------------------------------------------------------------------- #
 
-    main_menu_instance = mm.MainMenu(map_selected, highscore)
+    map_data = levels.get_level_info() # Loading the level data from the levels module
+    main_menu_instance = mm.MainMenu(map_data, map_selected, highscore)
     ship_instance = sh.Ship()
-    ship_orginal = ship_instance.create_ship_image()
     running = True
     reset_ship = False
-    delta_time = 0.0
+    delta_time = 0.
 
     # -------------------------------------------------------------------------------- #
     # -------------------------------------------------------------------------------- #
 
-    def start_game_loop(running=running, map_selected=map_selected, reset_ship=reset_ship, ship_instance=ship_instance, ship_orginal=ship_orginal, main_menu_instance=main_menu_instance, delta_time=delta_time):
+    def start_game_loop(running=running, map_selected=map_selected, reset_ship=reset_ship, ship_instance=ship_instance, main_menu_instance=main_menu_instance, delta_time=delta_time, map_data=map_data):
         while running:
             for event in pygame.event.get(): # Quiting the game loop if the window is closed
                 if event.type == pygame.QUIT: 
@@ -277,7 +282,6 @@ def game_loop():
 
             if reset_ship == True: # deliting and recreating the ship instance to reset all values
                 ship_instance = sh.Ship()
-                ship_orginal = ship_instance.create_ship_image()
                 reset_ship = False
 
             # -------------------------------------------------------------------------------- #
@@ -285,7 +289,6 @@ def game_loop():
 
             if map_selected == 0:
                 map = main_menu_instance.main_menu_loop(screen) # Displaying the main menu
-                map_data = levels.get_level_info()
                 if map in map_data[0]: # Checking if the selected map is valid
                     main_menu_instance.map_loading_animation(screen) # Displaying the map loading animation
                     map_instance = mp.TileMap(map, map_data[1][map], map_data[2][map]) # Creating a tilemap instance based on the selected map
@@ -294,6 +297,7 @@ def game_loop():
                     ship_instance.position = spawn_position # Setting the ship position to the spawn position
                     map_instance.tile_group.draw(screen) # Drawing the tilemap on the screen
                     map_selected = -1 # Setting the value to -1 to indicate that a map has been selected
+                    start_select = 1 # Resetting the start select variable for the next time the main menu is shown
                     game_state = "running" # Setting the game state to running
 
             # -------------------------------------------------------------------------------- #

@@ -10,7 +10,7 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        levels.py
 #  {[**Author**]}      Cutie Ashien
-#  {[**Version**]}     5.1.1
+#  {[**Version**]}     5.1.2
 #  {[**Date**]}        2026-04-29
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
@@ -22,6 +22,11 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#   - v5.1.2: Objective system update.
+#       - Fixed minor bugs in the objective system.
+#
+# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #   - v5.1.1: Objective system update.
 #       - Fixed minor bugs in the objective system.
@@ -111,7 +116,7 @@ def get_level_info(): # Get a list of all level names
                     level_names[i] += ' (Objective: Unknown)' # Add level with unknown objective if objective kind is not found
                     objective_level[i] = False # Keep this level selectable even if objective metadata is invalid
                     objective_duration_level[i] = False # Set objective duration to false for later use in level loading
-                    print(f"Objective {globals()[objective_level_name]} not found in objectives dictionary. Please check config.py for valid objective kinds.") # Print error if objective kind is not found
+                    print(f"Objective {globals()[objective_level_name]} not found in objectives dictionary. Please check Level {i}") # Print error if objective kind is not found
                 except Exception as e:
                     level_names[i] += ' (Objective: Error)' # Add level with error in objective
                     objective_level[i] = -1 # Set objective level to -1 for later use in level loading

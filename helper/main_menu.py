@@ -10,7 +10,7 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        main_menu.py
 #  {[**Author**]}      Cutie Ashien
-#  {[**Version**]}     5.1.1
+#  {[**Version**]}     5.1.2
 #  {[**Date**]}        2026-04-29
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
@@ -22,6 +22,11 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#   - v5.1.2: Objective system update.
+#       - Fixed minor bugs in the objective system.
+#
+# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #   - v5.1.1: Objective system update.
 #       - Fixed minor bugs in the objective system.
@@ -98,15 +103,15 @@ screensize_y = conf.screensize_y
 HOVER_COLOR = (255, 255, 0)
 
 class MainMenu:
-        def __init__(self, map_selected = 0, highscore = 0): # Initializing the main menu with map selection and highscore
+        def __init__(self, map_data, map_selected = 0, highscore = 0): # Initializing the main menu with map selection and highscore
+            self.map_data = map_data
             self.map_selected = map_selected
             self.highscore = highscore
             self.window = "main_menu" # Setting the initial window to main menu
             self.font = pygame.font.Font(None, 36) # Creating a font object for rendering text
-            self.map = levels.get_level_info()  # Get level names and objectives from levels.py
-            self.map_info = self.map[0]  # Get level names for menu display
-            self.objective_info = self.map[1]  # Get objective levels for level loading
-            self.duration_info = self.map[2]  # Get objective durations for level loading
+            self.map_info = self.map_data[0]  # Get level names for menu display
+            self.objective_info = self.map_data[1]  # Get objective levels for level loading
+            self.duration_info = self.map_data[2]  # Get objective durations for level loading
             self.center_x = screensize_x // 2
             self.center_y = screensize_y // 2
             self.level_count = len(self.map_info)  # Get the number of available levels
