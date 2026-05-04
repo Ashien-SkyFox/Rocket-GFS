@@ -216,6 +216,7 @@ class Ship:
             
             # Other
             self.won_countdown_start = True
+            self.win_coundition_met = False
 
         def create_ship_image(self):
             self.ship_orginal = pygame.image.load('pictures/Rocket.png').convert_alpha()
@@ -339,22 +340,25 @@ class Ship:
             self.surface = surface # Importing the surface to get pixel color from
 
         def won_countdown(self):
-            if self.won_countdown_start:
-                start_time = pygame.time.get_ticks() # Get the current time in milliseconds
-                countdown_duration = 3000 # Duration of the countdown in milliseconds (e.g., 3000ms = 3 seconds)
-                self.countdown_active = True # Flag to indicate that the countdown is active
-                self.end_countdown_tick = start_time + countdown_duration # Calculate the time when the countdown should end
-                self.won_countdown_start = False
+            if self.win_coundition_met == True:
+                if self.won_countdown_start:
+                    start_time = pygame.time.get_ticks() # Get the current time in milliseconds
+                    countdown_duration = 3000 # Duration of the countdown in milliseconds (e.g., 3000ms = 3 seconds)
+                    self.countdown_active = True # Flag to indicate that the countdown is active
+                    self.end_countdown_tick = start_time + countdown_duration # Calculate the time when the countdown should end
+                    self.won_countdown_start = False
 
-            while self.countdown_active:
-                if pygame.time.get_ticks() >= self.end_countdown_tick:
-                    self.countdown_active = False
-                    print("Trigger Win")
-                    self.game_state = "Win"
-                    return "You Win!", "win"
-                elif pygame.time.get_ticks() <= self.end_countdown_tick:
-                    self.sec_till_win_remaining = (self.end_countdown_tick - pygame.time.get_ticks()) // 1000 # Calculate the remaining seconds until win
-                    return f"Win in {self.sec_till_win_remaining} s", "Countdown Win"
+                while self.countdown_active:
+                    if pygame.time.get_ticks() >= self.end_countdown_tick:
+                        self.countdown_active = False
+                        print("Trigger Win")
+                        self.game_state = "Win"
+                        return "You Win!", "win"
+                    elif pygame.time.get_ticks() <= self.end_countdown_tick:
+                        self.sec_till_win_remaining = (self.end_countdown_tick - pygame.time.get_ticks()) // 1000 # Calculate the remaining seconds until win
+                        return f"Win in {self.sec_till_win_remaining} s", "Countdown Win"
+            else:
+                return "Objective/Conditions not met", None
 
         def reset_won_countdown(self):
             self.won_countdown_start = True
