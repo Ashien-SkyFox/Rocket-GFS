@@ -80,6 +80,10 @@ import pygame
 # setting some necessary variables
 vector = pygame.math.Vector2
 
+
+# Debug settings
+debug_mode = True
+
 # screen size
 
 screensize_x = 1200
@@ -126,10 +130,10 @@ ship_speedx_fade_fast_rate = 0.65
 unsafe_color = (255, 12, 0, 255) # red as unsave for walls
 start_point_color = (0, 255, 233, 255) # start point color representing the start point in the map
 end_point_color = (255, 0, 229, 255) # end point color representing the end point in the map
-valid_collision_colors = [unsafe_color, start_point_color, end_point_color]
-
-# Debug settings
-debug_mode = False
+objective_stay_color = (255, 140, 0, 255) # yellow color representing the stay objective
+objective_flyby_color = (8, 255, 0, 255) # green color representing the flyby objective
+objective_colors = [objective_stay_color, objective_flyby_color]
+valid_collision_colors = [unsafe_color, start_point_color, end_point_color, objective_colors]
 
 ##########################################################
 ##########################################################

@@ -10,8 +10,8 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        run.py
 #  {[**Author**]}      Cutie Ashien
-#  {[**Version**]}     5.1.0
-#  {[**Date**]}        2026-04-22
+#  {[**Version**]}     5.1.2
+#  {[**Date**]}        2026-04-29
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -34,6 +34,18 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#   - v5.1.2: Objective system update.
+#       - Fixed minor bugs in the objective system.
+#
+# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#
+#   - v5.1.1: Objective system update.
+#       - Fixed minor bugs in the objective system.
+#       - Improved objective tracking and display during gameplay.
+#       - Enhanced level design to better integrate objectives.
+#
+# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #   - v5.1.0: Objective system add.
 #       - Added an objective system to the game, allowing for different objectives to be defined and tracked during gameplay.
@@ -244,17 +256,17 @@ def game_loop():
     # -------------------------------------------------------------------------------- #
     # -------------------------------------------------------------------------------- #
 
-    main_menu_instance = mm.MainMenu(map_selected, highscore)
+    map_data = levels.get_level_info() # Loading the level data from the levels module
+    main_menu_instance = mm.MainMenu(map_data, map_selected, highscore)
     ship_instance = sh.Ship()
-    ship_orginal = ship_instance.create_ship_image()
     running = True
     reset_ship = False
-    delta_time = 0.0
+    delta_time = 0.
 
     # -------------------------------------------------------------------------------- #
     # -------------------------------------------------------------------------------- #
 
-    def start_game_loop(running=running, map_selected=map_selected, reset_ship=reset_ship, ship_instance=ship_instance, ship_orginal=ship_orginal, main_menu_instance=main_menu_instance, delta_time=delta_time):
+    def start_game_loop(running=running, map_selected=map_selected, reset_ship=reset_ship, ship_instance=ship_instance, main_menu_instance=main_menu_instance, delta_time=delta_time, map_data=map_data):
         while running:
             for event in pygame.event.get(): # Quiting the game loop if the window is closed
                 if event.type == pygame.QUIT: 
@@ -270,7 +282,6 @@ def game_loop():
 
             if reset_ship == True: # deliting and recreating the ship instance to reset all values
                 ship_instance = sh.Ship()
-                ship_orginal = ship_instance.create_ship_image()
                 reset_ship = False
 
             # -------------------------------------------------------------------------------- #
@@ -278,15 +289,16 @@ def game_loop():
 
             if map_selected == 0:
                 map = main_menu_instance.main_menu_loop(screen) # Displaying the main menu
-                level_info, objective = levels.get_level_info()
-                if map in level_info: # Checking if the selected map is valid
+                if map in map_data[0]: # Checking if the selected map is valid
                     main_menu_instance.map_loading_animation(screen) # Displaying the map loading animation
-                    map_instance = mp.TileMap(levels.grapp_level(map), objective[map]) # Creating a tilemap instance based on the selected map
+                    map_instance = mp.TileMap(map, map_data[1][map], map_data[2][map]) # Creating a tilemap instance based on the selected map
+                    ship_instance = sh.Ship(map_instance)
                     ship, ship_rect = ship_instance.get_rect()
                     spawn_position = map_instance.get_location_of_spawn_point(ship_rect) # Getting the spawn position from the tilemap
                     ship_instance.position = spawn_position # Setting the ship position to the spawn position
                     map_instance.tile_group.draw(screen) # Drawing the tilemap on the screen
                     map_selected = -1 # Setting the value to -1 to indicate that a map has been selected
+                    start_select = 1 # Resetting the start select variable for the next time the main menu is shown
                     game_state = "running" # Setting the game state to running
 
             # -------------------------------------------------------------------------------- #
@@ -303,30 +315,34 @@ def game_loop():
                     ship_instance.render_ship_maps() # Render the ship with updated rotation
                     game_state = ship_instance.check_game_state() # Check for game over or level completion
                     ship, ship_rect = ship_instance.get_rect() # Getting the ship image and rect for rendering
-                    objective_completed = map_instance.update_objective(ship_rect, delta_time)
-                    if objective_completed and conf.debug_mode:
-                        print("Objective complete")
                     if conf.debug_mode:
                         ship_instance.debug() # Starting the debug
                     screen.blit(ship, ship_rect) # Drawing the ship on the screen at the center position
                     if text_to_show is not None:
                         font = pygame.font.SysFont(None, 74) # Creating a font object for rendering text
-                        if reason is not None and reason == "Countdown Win":
+                        if reason is not None and reason == "not relevant":
                             text_to_show_font = font.render(text_to_show, True, (255, 0, 255))
                             screen.blit(text_to_show_font, (screensize_x // 2 - text_to_show_font.get_width() // 2, screensize_y // 2 - text_to_show_font.get_height() // 2)) # Blits the needed text
-                        else:
+                        elif reason is not None and reason == "Countdown Win":
+                            text_to_show_font = font.render(text_to_show, True, (255, 0, 255))
+                            screen.blit(text_to_show_font, (screensize_x // 2 - text_to_show_font.get_width() // 2, screensize_y // 2 - text_to_show_font.get_height() // 2)) # Blits the needed text
+                        elif reason is not None:
                             text_to_show_font = font.render(text_to_show, True, (255, 0, 255))
                             screen.blit(text_to_show_font, (screensize_x // 2 - text_to_show_font.get_width() // 2, screensize_y // 2 - text_to_show_font.get_height() // 2)) # Blits the needed text
                             pygame.display.flip() # Updating the display to show the new frame
                             pygame.time.delay(1000) # Delay for a second before resetting
-                            if game_state == "game over" or "Win":
+                            if game_state == "game over" or game_state == "Win":
                                 screen.fill((0, 0, 0)) # Filling the screen with black color to clear previous frame
                                 map_selected = 0 # Returning to main menu
                                 map = 0 # Resetting map variable
                                 reset_ship = True # Resetting the ship
                                 main_menu_instance.main_menu_reset() # Resetting the main menu instance
-                            else:
-                                print("ERROR")
+                        else:
+                            print("===============================")
+                            print("===============================")
+                            print("ERROR")
+                            print("===============================")
+                            print("===============================")
                     """
                     Do i remember how the heck that even worked :/
                         Probably not :D
@@ -340,6 +356,8 @@ def game_loop():
                     -v4.2.2
                     Well I started Refactoring
                     -v4.2.5
+                    Well refactored some parts and now know how its working again
+                    -v5.1.2
                     """
 
             # -------------------------------------------------------------------------------- #
