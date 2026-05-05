@@ -72,8 +72,14 @@ class Objective:
     def set_position(self, position):
         self.rect.topleft = position
 
-    def update(self, ship_rect, delta_time=0.0):
-        return self.complete
+    def update(self):
+        return "Parrent", "not relevant"
+    
+    def main_work(self):
+        if self.complete:
+            return "Completed you can move on", "not relevant"
+        else:
+            return self.update()
 
 class Stay(Objective):
     def __init__(self, position, size, duration):
@@ -81,26 +87,59 @@ class Stay(Objective):
         self.duration = duration
         self.complete = False
         self.curent_time = 0
+        self.countdown_start = True
+        self.countdown_active = False
 
-    def update(self, ship_rect, delta_time=0.0):
-        if self.rect.colliderect(ship_rect):
-            self.curent_time += delta_time
-            if self.curent_time >= self.duration:
+    def update(self):
+        if self.complete:
+            return "Completed you can move on", "not relevant"
+        
+        if self.countdown_start:
+                start_time = pygame.time.get_ticks() * 1000 # Get the current time in milliseconds
+                countdown_duration = self.duration # Duration of the countdown in milliseconds (e.g., 3000ms = 3 seconds)
+                self.countdown_active = True # Flag to indicate that the countdown is active
+                self.end_countdown_tick = start_time + countdown_duration # Calculate the time when the countdown should end
+                self.countdown_start = False
+
+        while self.countdown_active:
+            if pygame.time.get_ticks() >= self.end_countdown_tick:
+                self.countdown_active = False
+                print("stay done")
+                return "Completed you can move on", "not relevant"
+            elif pygame.time.get_ticks() <= self.end_countdown_tick:
+                self.sec_till_win_remaining = (self.end_countdown_tick - pygame.time.get_ticks()) // 1000 # Calculate the remaining seconds until win
                 self.complete = True
+                return f"Stay completed in {self.sec_till_win_remaining} s", "not relevant"
+    
+    def main_work(self):
+        if self.complete:
+            return "Completed you can move on", "not relevant"
         else:
-            self.curent_time = 0
-        return self.complete
+            return self.update()
+        
+    def reset(self):
+        self.curent_time = 0
+        self.countdown_start = True
+        self.countdown_active = False
+
 
 class Flyby(Objective):
     def __init__(self, position, size):
         super().__init__(position, size)
         self.complete = False
 
-    def update(self, ship_rect, delta_time=0.0):
-        if self.rect.colliderect(ship_rect):
-            self.complete = True
-        return self.complete
-
+    def update(self):
+        self.complete = True
+        return "Completed you can move on", "not relevant"
+    
+    def main_work(self):
+        if self.complete:
+            return "Completed you can move on", "not relevant"
+        else:
+            return self.update()
+        
+    def reset(self):
+        print("not needed")
 
 OBJECTIVE_TYPES = {
     "flyby": {

@@ -137,7 +137,8 @@ screensize_y = conf.screensize_y # Importing screen size y from config module
 
 ### Ship Class ###
 class Ship:
-        def __init__(self):
+        def __init__(self, map_instance = None):
+            self.map_instance = map_instance
             ##########################################################
             ##########################################################
             self.create_ship_image() # Create the ship image and mask for collision detection
@@ -206,12 +207,14 @@ class Ship:
             self.unsave_color = conf.unsafe_color
             self.start_point_color = conf.start_point_color
             self.end_point_color = conf.end_point_color
+            self.objective_colors = conf.objective_colors
             self.debug_enabled = getattr(conf, 'debug_mode', False)
             self.ship_mask = None
             self.total_collision_count = 0
             self.collision_start_side_count = 0
             self.collision_unsafe_side_count = 0
             self.collision_end_side_count = 0
+            self.object_side_count = 0
             self.collision_side = None
             
             # Other
@@ -340,25 +343,24 @@ class Ship:
             self.surface = surface # Importing the surface to get pixel color from
 
         def won_countdown(self):
-            if self.win_coundition_met == True:
-                if self.won_countdown_start:
-                    start_time = pygame.time.get_ticks() # Get the current time in milliseconds
-                    countdown_duration = 3000 # Duration of the countdown in milliseconds (e.g., 3000ms = 3 seconds)
-                    self.countdown_active = True # Flag to indicate that the countdown is active
-                    self.end_countdown_tick = start_time + countdown_duration # Calculate the time when the countdown should end
-                    self.won_countdown_start = False
+            if self.win_coundition_met != True:
+                return "Objective/Conditions not met", "not relevant"
+            if self.won_countdown_start:
+                start_time = pygame.time.get_ticks() # Get the current time in milliseconds
+                countdown_duration = 3000 # Duration of the countdown in milliseconds (e.g., 3000ms = 3 seconds)
+                self.countdown_active = True # Flag to indicate that the countdown is active
+                self.end_countdown_tick = start_time + countdown_duration # Calculate the time when the countdown should end
+                self.won_countdown_start = False
 
-                while self.countdown_active:
-                    if pygame.time.get_ticks() >= self.end_countdown_tick:
-                        self.countdown_active = False
-                        print("Trigger Win")
-                        self.game_state = "Win"
-                        return "You Win!", "win"
-                    elif pygame.time.get_ticks() <= self.end_countdown_tick:
-                        self.sec_till_win_remaining = (self.end_countdown_tick - pygame.time.get_ticks()) // 1000 # Calculate the remaining seconds until win
-                        return f"Win in {self.sec_till_win_remaining} s", "Countdown Win"
-            else:
-                return "Objective/Conditions not met", None
+            while self.countdown_active:
+                if pygame.time.get_ticks() >= self.end_countdown_tick:
+                    self.countdown_active = False
+                    print("Trigger Win")
+                    self.game_state = "Win"
+                    return "You Win!", "win"
+                elif pygame.time.get_ticks() <= self.end_countdown_tick:
+                    self.sec_till_win_remaining = (self.end_countdown_tick - pygame.time.get_ticks()) // 1000 # Calculate the remaining seconds until win
+                    return f"Win in {self.sec_till_win_remaining} s", "Countdown Win"
 
         def reset_won_countdown(self):
             self.won_countdown_start = True
@@ -369,6 +371,7 @@ class Ship:
             start_count = 0
             unsafe_count = 0
             end_count = 0
+            object_count = 0
 
             for x in range(overlap_rect.left, overlap_rect.right):
                 for y in range(overlap_rect.top, overlap_rect.bottom):
@@ -384,8 +387,10 @@ class Ship:
                         end_count += 1
                     elif overlap_pixel_color == self.unsave_color:
                         unsafe_count += 1
+                    elif overlap_pixel_color in self.objective_colors:
+                        object_count += 1 # Treat objective colors as unsafe for landing
 
-            return start_count, unsafe_count, end_count
+            return start_count, unsafe_count, end_count, object_count
 
         def check_collisions(self, sprite_group):
             ship_mask = self.ship_mask or pygame.mask.from_surface(self.ship) # Create a mask for the ship
@@ -394,6 +399,7 @@ class Ship:
             self.collision_start_side_count = 0 # Counter for collisions on the start side
             self.collision_unsafe_side_count = 0 # Counter for collisions on the unsafe side
             self.collision_end_side_count = 0 # Counter for collisions on the end side
+            self.object_side_count = 0 # Counter for collisions on objective tiles
             self.collision_side = None # Variable to store the determined collision side based on the count of each side
             touched_tiles = 0
 
@@ -410,7 +416,7 @@ class Ship:
 
                 touched_tiles += overlap_area
                 # Start/end only count as safe when the ship is landing from above and is nearly upright.
-                landing_on_top = collision_point[1] > ship_mask.get_size()[1] * 0.7
+                landing_on_top = collision_point[1] > ship_mask.get_size()[1] * 0.7 # Check if the collision point is in the upper 30% of the ship mask (indicating landing on top)
                 upright_enough = (abs(self.rotate_angle) <= self.collision_angle_limit or abs(360 - self.rotate_angle) <= self.collision_angle_limit)
                 match sprite.tile_type:
                     case 1:
@@ -419,7 +425,7 @@ class Ship:
                         if landing_on_top and upright_enough:
                             # Start tiles contain both safe and unsafe colors, so keep the cheap mask test
                             # and only do per-pixel color counting inside the real overlap area.
-                            start_count, unsafe_count, _ = self.count_collision_colors(ship_rect, ship_mask, sprite, sprite_mask)
+                            start_count, unsafe_count, _, object_count = self.count_collision_colors(ship_rect, ship_mask, sprite, sprite_mask)
                             self.collision_start_side_count += start_count
                             self.collision_unsafe_side_count += unsafe_count
                         else:
@@ -427,14 +433,17 @@ class Ship:
                     case 3:
                         if landing_on_top and upright_enough:
                             # Finish tiles use the same split safe/unsafe layout as the start tile.
-                            _, unsafe_count, end_count = self.count_collision_colors(ship_rect, ship_mask, sprite, sprite_mask)
+                            _, unsafe_count, end_count, object_count = self.count_collision_colors(ship_rect, ship_mask, sprite, sprite_mask)
                             self.collision_end_side_count += end_count
                             self.collision_unsafe_side_count += unsafe_count
                         else:
                             self.collision_unsafe_side_count += overlap_area
+                    case 4:
+                        _, unsafe_count, _, object_count = self.count_collision_colors(ship_rect, ship_mask, sprite, sprite_mask)
+                        self.object_side_count += object_count
 
             # Unsafe overlap always wins over safe overlap on start and finish tiles.
-            self.total_collision_count = self.collision_start_side_count + self.collision_unsafe_side_count + self.collision_end_side_count # Total collision count is the sum of all collision counts
+            self.total_collision_count = self.collision_start_side_count + self.collision_unsafe_side_count + self.collision_end_side_count + self.object_side_count  # Total collision count is the sum of all collision counts
             if self.total_collision_count != 0: # Only determine the collision side if there is at least one collision to prevent division by zero
                 if self.collision_unsafe_side_count > 0:
                     self.collision_side = "You where not suposed to do that"
@@ -442,7 +451,9 @@ class Ship:
                     self.collision_side = "on End"
                 elif self.collision_start_side_count > 0:
                     self.collision_side = "on Start"
-
+                elif self.object_side_count > 0:
+                    self.collision_side = "on Objective"
+                
                 # Collision response
             if self.debug_enabled:
                 print(f"Collision detected on {self.collision_side} side with {touched_tiles} touched tiles.")
@@ -480,16 +491,23 @@ class Ship:
                     self.prev_collision_count = 1 # Incrementing the previous collision count to determine if the ship is already colliding in the next frame
                     self.speedx_fade_fast = True # Enabling fast horizontal speed fade on collision
                     return self.won_countdown() # Trigger win countdown on end collision
-                    
+                                
+                case "on Objective":
+                    if self.debug_enabled:
+                        print("Collided with objective")
+                    return self.map_instance.objective_instance.main_work() # Update objectives based on the count of objective pixels collided with
+                
                 case None:
                     if self.debug_enabled:
                         print("No collision detected.")
                     self.reset_won_countdown()
+                    self.map_instance.objective_instance.reset() # Reset objectives when not colliding with anything
                     self.gravity_lock = False # Releasing gravity lock if there is no collision
                     self.rotation_lock = False # Releasing rotation lock if there is no collision
                     self.prev_collision_count = 0 # Resetting the previous collision count if there is no collision
                     self.speedx_fade_fast = False # Disabling fast horizontal speed fade if there is no collision
                     return None, None
+
 
         def game_over(self):
             if self.debug_enabled:
@@ -527,7 +545,8 @@ class Ship:
                 "collision_total_count": self.total_collision_count if hasattr(self, 'total_collision_count') else "N/A",
                 "collision_start_side_count": self.collision_start_side_count if hasattr(self, 'collision_start_side_count') else "N/A",
                 "collision_end_side_count": self.collision_end_side_count if hasattr(self, 'collision_end_side_count') else "N/A",
-                "collision_unsafe_side_count": self.collision_unsafe_side_count if hasattr(self, 'collision_unsafe_side_count') else "N/A"
+                "collision_unsafe_side_count": self.collision_unsafe_side_count if hasattr(self, 'collision_unsafe_side_count') else "N/A",
+                "collision_object_side_count": self.object_side_count if hasattr(self, 'object_side_count') else "N/A"
                 }
             for argument, value in debug_values.items():
                 print(f"{argument}: {value}")

@@ -292,6 +292,7 @@ def game_loop():
                 if map in map_data[0]: # Checking if the selected map is valid
                     main_menu_instance.map_loading_animation(screen) # Displaying the map loading animation
                     map_instance = mp.TileMap(map, map_data[1][map], map_data[2][map]) # Creating a tilemap instance based on the selected map
+                    ship_instance = sh.Ship(map_instance)
                     ship, ship_rect = ship_instance.get_rect()
                     spawn_position = map_instance.get_location_of_spawn_point(ship_rect) # Getting the spawn position from the tilemap
                     ship_instance.position = spawn_position # Setting the ship position to the spawn position
@@ -314,30 +315,34 @@ def game_loop():
                     ship_instance.render_ship_maps() # Render the ship with updated rotation
                     game_state = ship_instance.check_game_state() # Check for game over or level completion
                     ship, ship_rect = ship_instance.get_rect() # Getting the ship image and rect for rendering
-                    objective_completed = map_instance.update_objective(ship_rect, delta_time)
-                    if objective_completed and conf.debug_mode:
-                        print("Objective complete")
                     if conf.debug_mode:
                         ship_instance.debug() # Starting the debug
                     screen.blit(ship, ship_rect) # Drawing the ship on the screen at the center position
                     if text_to_show is not None:
                         font = pygame.font.SysFont(None, 74) # Creating a font object for rendering text
-                        if reason is not None and reason == "Countdown Win":
+                        if reason is not None and reason == "not relevant":
                             text_to_show_font = font.render(text_to_show, True, (255, 0, 255))
                             screen.blit(text_to_show_font, (screensize_x // 2 - text_to_show_font.get_width() // 2, screensize_y // 2 - text_to_show_font.get_height() // 2)) # Blits the needed text
-                        else:
+                        elif reason is not None and reason == "Countdown Win":
+                            text_to_show_font = font.render(text_to_show, True, (255, 0, 255))
+                            screen.blit(text_to_show_font, (screensize_x // 2 - text_to_show_font.get_width() // 2, screensize_y // 2 - text_to_show_font.get_height() // 2)) # Blits the needed text
+                        elif reason is not None:
                             text_to_show_font = font.render(text_to_show, True, (255, 0, 255))
                             screen.blit(text_to_show_font, (screensize_x // 2 - text_to_show_font.get_width() // 2, screensize_y // 2 - text_to_show_font.get_height() // 2)) # Blits the needed text
                             pygame.display.flip() # Updating the display to show the new frame
                             pygame.time.delay(1000) # Delay for a second before resetting
-                            if game_state == "game over" or "Win":
+                            if game_state == "game over" or game_state == "Win":
                                 screen.fill((0, 0, 0)) # Filling the screen with black color to clear previous frame
                                 map_selected = 0 # Returning to main menu
                                 map = 0 # Resetting map variable
                                 reset_ship = True # Resetting the ship
                                 main_menu_instance.main_menu_reset() # Resetting the main menu instance
-                            else:
-                                print("ERROR")
+                        else:
+                            print("===============================")
+                            print("===============================")
+                            print("ERROR")
+                            print("===============================")
+                            print("===============================")
                     """
                     Do i remember how the heck that even worked :/
                         Probably not :D

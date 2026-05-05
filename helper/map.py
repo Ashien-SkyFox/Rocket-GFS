@@ -228,11 +228,6 @@ class TileMap:
                     self.objective_instance.set_position(tile_sprite.rect.topleft)
 
             return self.tile_group # Return the group of tile sprites for collision detection
-        
-        def update_objective(self, ship_rect, delta_time):
-            if self.objective_instance is None:
-                return False
-            return self.objective_instance.update(ship_rect, delta_time)
 
         def get_type_of_tile_at_position(self, position):
             pass
