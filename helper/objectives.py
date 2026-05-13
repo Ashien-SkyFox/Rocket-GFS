@@ -10,8 +10,8 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        objectives.py
 #  {[**Author**]}      Cutie Ashien
-#  {[**Version**]}     5.1.0
-#  {[**Date**]}        2025-11-22
+#  {[**Version**]}     5.1.3
+#  {[**Date**]}        2026-05-13
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -22,6 +22,11 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#  -v5.1.3: Objective system update.
+#      - Half rework of objective system
+#
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #   -v5.1.0: Objective system add.
 #       - Added an objective system to the game, allowing for different objectives to be defined and tracked during gameplay.
@@ -84,7 +89,7 @@ class Objective:
 class Stay(Objective):
     def __init__(self, position, size, duration):
         super().__init__(position, size)
-        self.duration = duration
+        self.duration = duration * 1000 # Convert duration from seconds to milliseconds
         self.complete = False
         self.curent_time = 0
         self.countdown_start = True
@@ -95,8 +100,8 @@ class Stay(Objective):
             return "Completed you can move on", "not relevant"
         
         if self.countdown_start:
-                start_time = pygame.time.get_ticks() * 1000 # Get the current time in milliseconds
-                countdown_duration = self.duration # Duration of the countdown in milliseconds (e.g., 3000ms = 3 seconds)
+                start_time = pygame.time.get_ticks() # Get the current time in milliseconds
+                countdown_duration = self.duration # Duration of the countdown in milliseconds
                 self.countdown_active = True # Flag to indicate that the countdown is active
                 self.end_countdown_tick = start_time + countdown_duration # Calculate the time when the countdown should end
                 self.countdown_start = False
@@ -107,7 +112,7 @@ class Stay(Objective):
                 print("stay done")
                 return "Completed you can move on", "not relevant"
             elif pygame.time.get_ticks() <= self.end_countdown_tick:
-                self.sec_till_win_remaining = (self.end_countdown_tick - pygame.time.get_ticks()) // 1000 # Calculate the remaining seconds until win
+                self.sec_till_win_remaining = self.end_countdown_tick - pygame.time.get_ticks() # Calculate the remaining seconds until win
                 self.complete = True
                 return f"Stay completed in {self.sec_till_win_remaining} s", "not relevant"
     
@@ -141,51 +146,22 @@ class Flyby(Objective):
     def reset(self):
         print("not needed")
 
-OBJECTIVE_TYPES = {
-    "flyby": {
-        "class": Flyby,
-        "tile_path": 'pictures/tiles/Flyby.png',
-    },
-    "stay": {
-        "class": Stay,
-        "tile_path": 'pictures/tiles/Stay.png',
-        "duration": 3.0,
-    },
-}
+OBJECTIVE_TYPES = conf.objective_kinds
 
-
-def resolve_objective_kind(objective_data):
-    if objective_data is False or objective_data is None:
-        return None
-    if isinstance(objective_data, str):
-        objective_kind = objective_data.lower()
-        return objective_kind if objective_kind in OBJECTIVE_TYPES else None
-    return conf.objective_kinds.get(objective_data)
-
-
-def get_objective_definition(objective_data):
-    objective_kind = resolve_objective_kind(objective_data)
-    if objective_kind is None:
-        return None
-    return {
-        "kind": objective_kind,
-        **OBJECTIVE_TYPES[objective_kind],
-    }
-
-
-def create_objective(objective_kind, position, size):
-    """Create an objective instance based on the kind, position, and size."""
-    if objective_kind not in OBJECTIVE_TYPES:
-        return None
-    
-    objective_class = OBJECTIVE_TYPES[objective_kind]["class"]
-    
-    # Different objective types may have different constructor signatures
-    if objective_kind == "stay":
-        duration = OBJECTIVE_TYPES[objective_kind].get("duration", 3.0)
-        return objective_class(position, size, duration)
+def get_objective_definition(objective_number):
+    if objective_number in OBJECTIVE_TYPES:
+        return OBJECTIVE_TYPES[objective_number]
     else:
-        return objective_class(position, size)
+        raise ValueError(f"Objective number {objective_number} is not defined in OBJECTIVE_TYPES.")
 
+def create_objective(objective_data, position, size, duration=None):
+    if objective_data == "flyby":
+        return Flyby(position, size)
+    elif objective_data == "stay":
+        if duration is None:
+            raise ValueError("Duration must be provided for stay objectives.")
+        return Stay(position, size, duration)
+    else:
+        raise ValueError(f"Objective type {objective_data} is not recognized.")
 
 print("Work in progress, objectives system is being implemented...")

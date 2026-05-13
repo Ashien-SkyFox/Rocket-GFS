@@ -10,8 +10,8 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        map.py
 #  {[**Author**]}      Cutie Ashien
-#  {[**Version**]}     5.1.1
-#  {[**Date**]}        2026-04-29
+#  {[**Version**]}     5.1.3
+#  {[**Date**]}        2026-05-13
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -22,6 +22,11 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#  -v5.1.3: Objective system update.
+#      - Half rework of objective system
+#
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #   - v5.1.1: Objective system update.
 #       - Fixed minor bugs in the objective system.
@@ -125,8 +130,8 @@ screensize_y = conf.screensize_y # Importing screen size y from config module
 
 ### TileMap Class ###
 class TileMap:
-        def __init__(self, map_selected, objective_data, duration_data):
-            self.duration_data = duration_data
+        def __init__(self, map_data, map_i):
+            self.duration_data = map_data[2][map_i]
             # Tile size and spacing
             self.sizing_factor = conf.map_sizing_factor  # Sizing factor for the map tiles
             self.tile_spacing = int(((self.sizing_factor * screensize_x) / 2) + ((self.sizing_factor * screensize_y) / 2))  # Calculating tile spacing based on screen size
@@ -138,15 +143,15 @@ class TileMap:
             self.finish_point_tile = pygame.image.load('pictures/tiles/Finisch_point.png').convert_alpha() # Loading tile images
             self.objective_tile = None
             self.objective = None
-            self.objective_definition = objectives_helper.get_objective_definition(objective_data)
+            self.objective_definition = objectives_helper.get_objective_definition(map_i)
             if self.objective_definition is not None:
                 self.objective_tile = pygame.image.load(self.objective_definition["tile_path"]).convert_alpha() # Loading tile image from objectives.py metadata
-                self.objective = self.objective_definition["kind"]
+                self.objective = self.objective_definition["type"]
             # Others
             self.tile_start_rect = self.start_point_tile.get_rect() # Getting the rectangle of the start point tile
 
             # Store map data
-            self.map_data = levels.grapp_level(map_selected)
+            self.map_data = levels.grapp_level(map_i) # Getting the map data for the selected map
             self.width = len(self.map_data[0]) * self.tile_size[0] # Calculating the width of the map based on the number of columns and tile size
             self.height = len(self.map_data) * self.tile_size[1] # Calculating the height of the map based on the number of rows and tile size
             self.tile_group = pygame.sprite.Group() # Group to hold all tile sprites
@@ -194,9 +199,10 @@ class TileMap:
                         tile_sprite.rect = tile_sprite.image.get_rect(topleft=(tile_sprite.grid_x, tile_sprite.grid_y)) # Setting the rectangle of the sprite based on its grid position
                         if tile_type == 4 and self.objective_definition is not None:
                             self.objective_instance = objectives_helper.create_objective(
-                                self.objective_definition["kind"],
+                                self.objective_definition["type"],
                                 (tile_sprite.grid_x, tile_sprite.grid_y),
                                 self.tile_size,
+                                self.duration_data
                             )
                         self.tile_sprites.append(tile_sprite) # Adding the tile sprite to the list of tile sprites
                     else:

@@ -10,8 +10,8 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        config.py
 #  {[**Author**]}      Cutie Ashien
-#  {[**Version**]}     5.1.0
-#  {[**Date**]}        2025-11-22
+#  {[**Version**]}     5.1.3
+#  {[**Date**]}        2026-05-13
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -22,6 +22,11 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#  -v5.1.3: Objective system update.
+#      - Half rework of objective system
+#
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #   -v5.1.0: Objective system add.
 #       - Added an objective system to the game, allowing for different objectives to be defined and tracked during gameplay.
@@ -133,7 +138,7 @@ end_point_color = (255, 0, 229, 255) # end point color representing the end poin
 objective_stay_color = (255, 140, 0, 255) # yellow color representing the stay objective
 objective_flyby_color = (8, 255, 0, 255) # green color representing the flyby objective
 objective_colors = [objective_stay_color, objective_flyby_color]
-valid_collision_colors = [unsafe_color, start_point_color, end_point_color, objective_colors]
+valid_collision_colors = [unsafe_color, start_point_color, end_point_color] + objective_colors
 
 ##########################################################
 ##########################################################
@@ -146,6 +151,13 @@ map_tile_size = (int((map_sizing_factor * screensize_x) + (map_sizing_factor * s
 # -------------------------------------------------------------- #
 # Objective kinds and allocated numbers for map creation
 objective_kinds = {
-    1: 'flyby',
-    2: 'stay'
+    1: {
+        'type': 'flyby',
+        'tile_path': r'pictures\tiles\Flyby.png'
+    },
+    2: {
+        'type': 'stay',
+        'duration': 3.0, # Default duration for stay objective
+        'tile_path': r'pictures\tiles\Stay.png'
+    }
 }
