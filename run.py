@@ -10,8 +10,8 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        run.py
 #  {[**Author**]}      Cutie Ashien
-#  {[**Version**]}     5.1.3
-#  {[**Date**]}        2026-05-13
+#  {[**Version**]}     5.1.2
+#  {[**Date**]}        2026-04-29
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -34,11 +34,6 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
-#
-#  -v5.1.3: Objective system update.
-#      - Half rework of objective system
-#
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #   - v5.1.2: Objective system update.
 #       - Fixed minor bugs in the objective system.
@@ -251,7 +246,7 @@ vector = conf.vector
 ### Game Loop ###
 
 def game_loop():
-    pygame.display.set_caption("Rocket - v5.1.3") # Setting the window title
+    pygame.display.set_caption("Rocket - v5.1.0") # Setting the window title
     pygame.init()
 
     map_selected = 0 # 0 = main menu, -1 = map loaded
@@ -296,7 +291,7 @@ def game_loop():
                 map = main_menu_instance.main_menu_loop(screen) # Displaying the main menu
                 if map in map_data[0]: # Checking if the selected map is valid
                     main_menu_instance.map_loading_animation(screen) # Displaying the map loading animation
-                    map_instance = mp.TileMap(map_data, map) # Creating a tilemap instance based on the selected map
+                    map_instance = mp.TileMap(map, map_data[1][map], map_data[2][map]) # Creating a tilemap instance based on the selected map
                     ship_instance = sh.Ship(map_instance)
                     ship, ship_rect = ship_instance.get_rect()
                     spawn_position = map_instance.get_location_of_spawn_point(ship_rect) # Getting the spawn position from the tilemap

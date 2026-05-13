@@ -10,8 +10,8 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        levels.py
 #  {[**Author**]}      Cutie Ashien
-#  {[**Version**]}     5.1.3
-#  {[**Date**]}        2026-05-13
+#  {[**Version**]}     5.1.2
+#  {[**Date**]}        2026-04-29
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -22,11 +22,6 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
-#
-#  -v5.1.3: Objective system update.
-#      - Half rework of objective system
-#
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #   - v5.1.2: Objective system update.
 #       - Fixed minor bugs in the objective system.
@@ -89,11 +84,11 @@ import config as conf # Importing config module
 
 # ------------------------------------------------------------------------------ #
 objectives = conf.objective_kinds # Importing objective kinds from config for level objectives
-mapdata = [] # Initialize mapdata list to store level information
+
 # Function to retrieve level data
 
-def grapp_level(map_i): # Retrieve a specific level by its number
-    level_name = f'tilemap_level_{map_i}' # Construct level variable name
+def grapp_level(number): # Retrieve a specific level by its number
+    level_name = f'tilemap_level_{number}' # Construct level variable name
     return globals().get(level_name, None) # Return the level or None if not found
 
 def get_level_info(): # Get a list of all level names
@@ -112,7 +107,7 @@ def get_level_info(): # Get a list of all level names
             duration = f'objective_duration_level_{i}' # Construct duration variable name
             if objective_level_name in globals() and globals()[objective_level_name]: # Check if objective exists and is true
                 try:
-                    level_names[i] += f' (Objective: {objectives[globals()[objective_level_name]]["type"]})' # Add objective tag to level name
+                    level_names[i] += f' (Objective: {objectives[globals()[objective_level_name]]})' # Add objective tag to level name
                     objective_level[i] = globals()[objective_level_name] # Add objective level to dictionary for later use in level loading
                     objective_duration_level[i] = globals()[duration] # Add duration to dictionary for later use in level loading
                     if objective_duration_level[i] is not False and objective_duration_level[i] is not None: # Check if duration is valid
