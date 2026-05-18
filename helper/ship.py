@@ -495,13 +495,16 @@ class Ship:
                 case "on Objective":
                     if self.debug_enabled:
                         print("Collided with objective")
+                    if self.map_instance.objective_instance is None:
+                        return None, None
                     return self.map_instance.objective_instance.main_work() # Update objectives based on the count of objective pixels collided with
                 
                 case None:
                     if self.debug_enabled:
                         print("No collision detected.")
                     self.reset_won_countdown()
-                    self.map_instance.objective_instance.reset() # Reset objectives when not colliding with anything
+                    if self.map_instance.objective_instance is not None:
+                        self.map_instance.objective_instance.reset() # Reset objectives when not colliding with anything
                     self.gravity_lock = False # Releasing gravity lock if there is no collision
                     self.rotation_lock = False # Releasing rotation lock if there is no collision
                     self.prev_collision_count = 0 # Resetting the previous collision count if there is no collision

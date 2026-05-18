@@ -11,7 +11,7 @@
 #  {[**File**]}        map.py
 #  {[**Author**]}      Cutie Ashien
 #  {[**Version**]}     5.1.3
-#  {[**Date**]}        2026-05-13
+#  {[**Date**]}        2026-05-18
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -23,12 +23,13 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
 #
-#  -v5.1.3: Objective system update.
-#      - Half rework of objective system
+#   -v5.1.3: Objective system update.
+#       - Half rework of objective system
+#      - Fixed crash on load level with no or broken objective
 #
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
-#   - v5.1.1: Objective system update.
+#   -v5.1.1: Objective system update.
 #       - Fixed minor bugs in the objective system.
 #       - Improved objective tracking and display during gameplay.
 #       - Enhanced level design to better integrate objectives.
@@ -131,7 +132,7 @@ screensize_y = conf.screensize_y # Importing screen size y from config module
 ### TileMap Class ###
 class TileMap:
         def __init__(self, map_data, map_i):
-            self.duration_data = map_data[2][map_i]
+            self.duration_data = map_data[2].get(map_i, False)
             # Tile size and spacing
             self.sizing_factor = conf.map_sizing_factor  # Sizing factor for the map tiles
             self.tile_spacing = int(((self.sizing_factor * screensize_x) / 2) + ((self.sizing_factor * screensize_y) / 2))  # Calculating tile spacing based on screen size
@@ -143,10 +144,16 @@ class TileMap:
             self.finish_point_tile = pygame.image.load('pictures/tiles/Finisch_point.png').convert_alpha() # Loading tile images
             self.objective_tile = None
             self.objective = None
-            self.objective_definition = objectives_helper.get_objective_definition(map_i)
+            objective_data = map_data[1].get(map_i, False)
+            self.objective_definition = objectives_helper.get_objective_definition(objective_data)
             if self.objective_definition is not None:
-                self.objective_tile = pygame.image.load(self.objective_definition["tile_path"]).convert_alpha() # Loading tile image from objectives.py metadata
-                self.objective = self.objective_definition["type"]
+                try:
+                    self.objective_tile = pygame.image.load(self.objective_definition["tile_path"]).convert_alpha() # Loading tile image from objectives.py metadata
+                    self.objective = self.objective_definition["type"]
+                except (KeyError, FileNotFoundError, TypeError, pygame.error):
+                    self.objective_definition = None
+                    self.objective_tile = None
+                    self.objective = None
             # Others
             self.tile_start_rect = self.start_point_tile.get_rect() # Getting the rectangle of the start point tile
 
