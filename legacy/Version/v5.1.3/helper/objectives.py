@@ -105,17 +105,19 @@ class Stay(Objective):
                 countdown_duration = self.duration # Duration of the countdown in milliseconds
                 self.countdown_active = True # Flag to indicate that the countdown is active
                 self.end_countdown_tick = start_time + countdown_duration # Calculate the time when the countdown should end
+                print(f"Countdown started, will end on tick {self.end_countdown_tick}")
                 self.countdown_start = False
 
         while self.countdown_active:
             if pygame.time.get_ticks() >= self.end_countdown_tick:
                 self.countdown_active = False
+                self.complete = True
                 print("stay done")
                 return "Completed you can move on", "not relevant"
             elif pygame.time.get_ticks() <= self.end_countdown_tick:
                 self.sec_till_win_remaining = self.end_countdown_tick - pygame.time.get_ticks() # Calculate the remaining seconds until win
-                self.complete = True
-                return f"Stay completed in {self.sec_till_win_remaining} s", "not relevant"
+                self.complete = False
+                return f"Stay completed in {self.sec_till_win_remaining/1000:.2f} s", "not relevant"
     
     def main_work(self):
         if self.complete:
