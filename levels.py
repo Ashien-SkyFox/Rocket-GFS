@@ -23,8 +23,8 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
 #
-#  -v5.1.3: Objective system update.
-#      - Half rework of objective system
+#  - v5.1.4: Win condition fix.
+#      - Added a fix to the win condition check in the ship class to handle cases where there is no objective instance, allowing for levels without specific objectives to be completed successfully.
 #
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #

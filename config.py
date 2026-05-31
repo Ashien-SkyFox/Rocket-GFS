@@ -23,12 +23,12 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
 #
-#  -v5.1.3: Objective system update.
+#  - v5.1.3: Objective system update.
 #      - Half rework of objective system
 #
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
-#   -v5.1.0: Objective system add.
+#   - v5.1.0: Objective system add.
 #       - Added an objective system to the game, allowing for different objectives to be defined and tracked during gameplay.
 #       - Implemented an Objective class to represent individual objectives and their states.
 #       - Updated the game loop to check for objective completion and update the game state accordingly.
@@ -37,7 +37,7 @@
 #
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
-#   -v5.0.1: Collision End check and start of refactoring.
+#   - v5.0.1: Collision End check and start of refactoring.
 #       - Checks if player is at the endpoint and ending the game.
 #       - Refactored the collision code to be easier to read and maintain.
 #       - Reused cached masks for the ship and tiles to reduce collision overhead.
@@ -48,7 +48,7 @@
 #
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
-#   -v4.2.1: Collision Color chek update.
+#   - v4.2.1: Collision Color chek update.
 #       - Added ability to chek the overlapping pixel for collor
 #
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

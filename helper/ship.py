@@ -10,8 +10,8 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        ship.py
 #  {[**Author**]}      Cutie Ashien
-#  {[**Version**]}     5.1.0
-#  {[**Date**]}        2025-11-22
+#  {[**Version**]}     5.1.4
+#  {[**Date**]}        2026-05-31
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -23,7 +23,12 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
 #
-#   -v5.1.0: Objective system add.
+#  - v5.1.4: Winn condition fix.
+#      - Added a fix to the win condition check in the ship class to handle cases where there is no objective instance, allowing for levels without specific objectives to be completed successfully.
+#
+# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#
+#   - v5.1.0: Objective system add.
 #       - Added an objective system to the game, allowing for different objectives to be defined and tracked during gameplay.
 #       - Implemented an Objective class to represent individual objectives and their states.
 #       - Updated the game loop to check for objective completion and update the game state accordingly.
@@ -32,7 +37,7 @@
 #
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
-#   -v5.0.1: Collision End check and start of refactoring.
+#   - v5.0.1: Collision End check and start of refactoring.
 #       - Checks if player is at the endpoint and ending the game.
 #       - Refactored the collision code to be easier to read and maintain.
 #       - Reused cached masks for the ship and tiles to reduce collision overhead.
@@ -43,12 +48,12 @@
 #
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
-#   -v5.0.0 Collision End check and start of refactoring.
+#   - v5.0.0 Collision End check and start of refactoring.
 #       - Checks if player is at the endpoint and ending the game.
 #
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
-#   -v4.2.1: Collision Color chek update.
+#   - v4.2.1: Collision Color chek update.
 #       - Added ability to chek the overlapping pixel for collor
 #
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -219,7 +224,7 @@ class Ship:
             
             # Other
             self.won_countdown_start = True
-            self.win_coundition_met = False
+            self.win_condition_met = False
 
         def create_ship_image(self):
             self.ship_orginal = pygame.image.load('pictures/Rocket.png').convert_alpha()
@@ -343,7 +348,11 @@ class Ship:
             self.surface = surface # Importing the surface to get pixel color from
 
         def won_countdown(self):
-            if self.win_coundition_met != True:
+            if self.map_instance.objective_instance is None:
+                self.win_condition_met = True # If there is no objective instance, we can consider the win condition as met
+            else:
+                self.win_condition_met = self.map_instance.objective_instance.complete # Check if the win condition is met
+            if self.win_condition_met != True:
                 return "Objective/Conditions not met", "not relevant"
             if self.won_countdown_start:
                 start_time = pygame.time.get_ticks() # Get the current time in milliseconds

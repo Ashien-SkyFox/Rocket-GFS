@@ -23,13 +23,13 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
 #
-#  -v5.1.3: Objective system update.
+#  - v5.1.3: Objective system update.
 #      - Half rework of objective system
 #      - Fixed crash on load level with no or broken objective
 #
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
-#   -v5.1.0: Objective system add.
+#   - v5.1.0: Objective system add.
 #       - Added an objective system to the game, allowing for different objectives to be defined and tracked during gameplay.
 #       - Implemented an Objective class to represent individual objectives and their states.
 #       - Updated the game loop to check for objective completion and update the game state accordingly.
