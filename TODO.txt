@@ -10,10 +10,21 @@
 #################################################################################################################################################################################################################
 
 TODO
-    - Win condisions for stay and flyby or more Objectives.
-    - Adding logic for win condition setting
-    - Arrow to next objective/finish
     - new desinges
+
+
+
+
+
+    
+    - Arrow to next objective/finish
+
+
+
+
+
+
+
     - highscore
     - preventing player form spawining inside tile if a tile is above start.
 
