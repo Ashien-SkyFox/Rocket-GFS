@@ -153,11 +153,17 @@ map_tile_size = (int((map_sizing_factor * screensize_x) + (map_sizing_factor * s
 objective_kinds = {
     1: {
         'type': 'flyby',
-        'tile_path': r'pictures\tiles\Flyby.png'
+        'tile_path': r'pictures\tiles\Flyby - frontend.png'
     },
     2: {
         'type': 'stay',
         'duration': 3.0, # Default duration for stay objective
-        'tile_path': r'pictures\tiles\Stay.png'
+        'tile_path': r'pictures\tiles\Stay - frontend.png'
     }
 }
+
+# Pngs for all
+wall_tile = r'pictures/tiles/Basic_wall.png' # Loading tile images
+start_point_tile = r'pictures/tiles/Start_point.png' # Loading tile images
+finish_point_tile = r'pictures/tiles/Finisch_point.png' # Loading tile images
+rocket_ship = r'pictures/Rocket - frontend.png' # Loading tile images

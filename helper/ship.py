@@ -227,7 +227,7 @@ class Ship:
             self.win_condition_met = False
 
         def create_ship_image(self):
-            self.ship_orginal = pygame.image.load('pictures/Rocket.png').convert_alpha()
+            self.ship_orginal = pygame.image.load(conf.rocket_ship).convert_alpha()
             """
             Problems: I couldent load the image from a subfolder
             Fixed: I used os.path.join to create the correct path to the image

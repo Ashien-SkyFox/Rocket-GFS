@@ -139,9 +139,9 @@ class TileMap:
             self.tile_size = conf.map_tile_size  # Tile size based on sizing factor
 
             # Load tile images
-            self.wall_tile = pygame.image.load('pictures/tiles/Basic_wall.png').convert_alpha() # Loading tile images
-            self.start_point_tile = pygame.image.load('pictures/tiles/Start_point.png').convert_alpha() # Loading tile images
-            self.finish_point_tile = pygame.image.load('pictures/tiles/Finisch_point.png').convert_alpha() # Loading tile images
+            self.wall_tile = pygame.image.load(conf.wall_tile).convert_alpha() # Loading tile images
+            self.start_point_tile = pygame.image.load(conf.start_point_tile).convert_alpha() # Loading tile images
+            self.finish_point_tile = pygame.image.load(conf.finish_point_tile).convert_alpha() # Loading tile images
             self.objective_tile = None
             self.objective = None
             objective_data = map_data[1].get(map_i, False)
