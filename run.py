@@ -253,6 +253,30 @@ screensize_x = conf.screensize_x
 screensize_y = conf.screensize_y
 vector = conf.vector
 
+
+def draw_navigation_arrow(screen, ship_position, target_position):
+    if target_position is None:
+        return
+
+    direction = vector(target_position) - vector(ship_position)
+    if direction.length_squared() <= 0.0001:
+        return
+
+    angle = math.atan2(direction.y, direction.x)
+    arrow_origin = vector(screensize_x * 0.5, 40)
+    base_points = [vector(18, 0), vector(-10, -8), vector(-10, 8)]
+    rotated_points = []
+    cos_a = math.cos(angle)
+    sin_a = math.sin(angle)
+    for point in base_points:
+        rotated_x = point.x * cos_a - point.y * sin_a
+        rotated_y = point.x * sin_a + point.y * cos_a
+        rotated_points.append((arrow_origin.x + rotated_x, arrow_origin.y + rotated_y))
+
+    pygame.draw.circle(screen, (25, 25, 25), (int(arrow_origin.x), int(arrow_origin.y)), 16)
+    pygame.draw.polygon(screen, (255, 230, 0), rotated_points)
+    pygame.draw.circle(screen, (20, 20, 20), (int(arrow_origin.x), int(arrow_origin.y)), 16, 2)
+
 ### Game Loop ###
 
 def game_loop():
@@ -328,6 +352,8 @@ def game_loop():
                     if conf.debug_mode:
                         ship_instance.debug() # Starting the debug
                     screen.blit(ship, ship_rect) # Drawing the ship on the screen at the center position
+                    navigation_target = map_instance.get_navigation_target_position()
+                    draw_navigation_arrow(screen, position, navigation_target)
                     if text_to_show is not None:
                         font = pygame.font.SysFont(None, 74) # Creating a font object for rendering text
                         if reason is not None and reason == "not relevant":

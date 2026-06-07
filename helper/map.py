@@ -163,6 +163,8 @@ class TileMap:
             self.height = len(self.map_data) * self.tile_size[1] # Calculating the height of the map based on the number of rows and tile size
             self.tile_group = pygame.sprite.Group() # Group to hold all tile sprites
             self.objective_instance = None
+            self.objective_world_position = None
+            self.finish_world_position = None
             self.create_tiles() # Creating the tile sprites
 
             
@@ -204,7 +206,16 @@ class TileMap:
                         tile_sprite.grid_x = col_index * self.tile_spacing # Calculating the grid x position of the tile
                         tile_sprite.grid_y = row_index * self.tile_spacing # Calculating the grid y position of the tile
                         tile_sprite.rect = tile_sprite.image.get_rect(topleft=(tile_sprite.grid_x, tile_sprite.grid_y)) # Setting the rectangle of the sprite based on its grid position
+                        if tile_type == 3:
+                            self.finish_world_position = vector(
+                                tile_sprite.grid_x + (self.tile_size[0] / 2),
+                                tile_sprite.grid_y + (self.tile_size[1] / 2)
+                            )
                         if tile_type == 4 and self.objective_definition is not None:
+                            self.objective_world_position = vector(
+                                tile_sprite.grid_x + (self.tile_size[0] / 2),
+                                tile_sprite.grid_y + (self.tile_size[1] / 2)
+                            )
                             self.objective_instance = objectives_helper.create_objective(
                                 self.objective_definition["type"],
                                 (tile_sprite.grid_x, tile_sprite.grid_y),
@@ -253,3 +264,8 @@ class TileMap:
                         y = row_index * self.tile_size[1] - (((ship_rect.height * 2 - ship_rect.height / 2) * (self.sizing_factor / 0.3)) * 0.5) 
                         return vector(x, y)
             return vector(0, 0) # Default to (0, 0) if no start point found
+
+        def get_navigation_target_position(self):
+            if self.objective_instance is not None and not self.objective_instance.complete and self.objective_world_position is not None:
+                return self.objective_world_position
+            return self.finish_world_position
