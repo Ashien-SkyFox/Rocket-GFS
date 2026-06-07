@@ -236,6 +236,17 @@ class Ship:
             self.ship_orginal = pygame.transform.scale(self.ship_orginal, (ships_size, ships_size)) # Scaling the ship image based on screen size
             self.ship = self.ship_orginal # Initializing the ship image
             self.ship_mask = pygame.mask.from_surface(self.ship)
+
+        def update_screen_size(self, new_width, new_height):
+            global screensize_x, screensize_y
+            screensize_x = int(new_width)
+            screensize_y = int(new_height)
+
+            # Rebuild ship sprite for the new screen size while keeping orientation.
+            current_angle = self.rotate_angle
+            self.create_ship_image()
+            self.ship = pygame.transform.rotate(self.ship_orginal, current_angle)
+            self.ship_mask = pygame.mask.from_surface(self.ship)
         
         def render_ship_maps(self):
             self.ship_rect = self.ship.get_rect(center = ((0.5 * screensize_x), (0.5 * screensize_y))) # Getting the rect of the ship image to center it on the screen

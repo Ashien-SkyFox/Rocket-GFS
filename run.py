@@ -254,6 +254,69 @@ screensize_y = conf.screensize_y
 vector = conf.vector
 
 
+def apply_runtime_screen_size(new_width, new_height):
+    global screensize_x, screensize_y
+    screensize_x = int(new_width)
+    screensize_y = int(new_height)
+    conf.screensize_x = screensize_x
+    conf.screensize_y = screensize_y
+    conf.map_tile_size = (
+        int((conf.map_sizing_factor * screensize_x) + (conf.map_sizing_factor * screensize_y)) / 2,
+        int((conf.map_sizing_factor * screensize_x) + (conf.map_sizing_factor * screensize_y)) / 2
+    )
+    sh.screensize_x = screensize_x
+    sh.screensize_y = screensize_y
+    mp.screensize_x = screensize_x
+    mp.screensize_y = screensize_y
+
+
+def create_window(window_size):
+    return pygame.display.set_mode(window_size, pygame.RESIZABLE)
+
+
+def get_window_position_safe():
+    if hasattr(pygame.display, "get_window_position"):
+        try:
+            return pygame.display.get_window_position()
+        except Exception:
+            return None
+    return None
+
+
+def set_window_position_safe(x, y):
+    if hasattr(pygame.display, "set_window_position"):
+        try:
+            pygame.display.set_window_position(int(x), int(y))
+        except Exception:
+            pass
+
+
+def preserve_ship_world_on_resize(ship_instance, old_tile_spacing, new_tile_spacing):
+    if old_tile_spacing <= 0 or new_tile_spacing <= 0:
+        return
+
+    tile_position = vector(ship_instance.position.x / old_tile_spacing, ship_instance.position.y / old_tile_spacing)
+    tile_velocity = vector(ship_instance.velocity.x / old_tile_spacing, ship_instance.velocity.y / old_tile_spacing)
+
+    ship_instance.position = vector(tile_position.x * new_tile_spacing, tile_position.y * new_tile_spacing)
+    ship_instance.velocity = vector(tile_velocity.x * new_tile_spacing, tile_velocity.y * new_tile_spacing)
+    ship_instance.acceleration_vector = vector(0, 0)
+    if hasattr(ship_instance, "temp_position"):
+        ship_instance.temp_position = ship_instance.position.copy()
+
+
+def apply_window_resize(screen, new_size, ship_instance, map_selected, map_instance, resize_grace_frames):
+    screen = create_window(new_size)
+    apply_runtime_screen_size(*new_size)
+    ship_instance.update_screen_size(*new_size)
+    if map_selected == -1 and map_instance is not None:
+        old_tile_spacing = map_instance.tile_spacing
+        map_instance.update_screen_size(*new_size)
+        preserve_ship_world_on_resize(ship_instance, old_tile_spacing, map_instance.tile_spacing)
+        resize_grace_frames = 4
+    return screen, resize_grace_frames
+
+
 def draw_navigation_arrow(screen, ship_position, target_position):
     if target_position is None:
         return
@@ -284,7 +347,13 @@ def game_loop():
     pygame.init()
 
     map_selected = 0 # 0 = main menu, -1 = map loaded
-    screen = pygame.display.set_mode((screensize_x, screensize_y)) # set the screen size
+    display_info = pygame.display.Info()
+    default_window_size = (max(800, int(display_info.current_w * 0.75)), max(450, int(display_info.current_h * 0.75)))
+    windowed_size = default_window_size
+    bordered_fullscreen = False
+    previous_window_position = None
+    screen = create_window(default_window_size) # set the screen size
+    apply_runtime_screen_size(*screen.get_size())
     clock = pygame.time.Clock() # Creating a clock object to manage the frame rate
 
     # -------------------------------------------------------------------------------- #
@@ -296,15 +365,62 @@ def game_loop():
     running = True
     reset_ship = False
     delta_time = 0.
+    resize_grace_frames = 0
+    ignore_resize_events = 0
 
     # -------------------------------------------------------------------------------- #
     # -------------------------------------------------------------------------------- #
 
     def start_game_loop(running=running, map_selected=map_selected, reset_ship=reset_ship, ship_instance=ship_instance, main_menu_instance=main_menu_instance, delta_time=delta_time, map_data=map_data):
+        nonlocal screen, windowed_size, bordered_fullscreen, resize_grace_frames, ignore_resize_events, previous_window_position
+        map_instance = None
         while running:
             for event in pygame.event.get(): # Quiting the game loop if the window is closed
                 if event.type == pygame.QUIT: 
                     running = False 
+                elif event.type == pygame.KEYDOWN and event.key == pygame.K_F11:
+                    if not bordered_fullscreen:
+                        previous_window_position = get_window_position_safe()
+                        windowed_size = screen.get_size()
+                        desktop_size = (pygame.display.Info().current_w, pygame.display.Info().current_h)
+                        screen, resize_grace_frames = apply_window_resize(
+                            screen,
+                            desktop_size,
+                            ship_instance,
+                            map_selected,
+                            map_instance,
+                            resize_grace_frames
+                        )
+                        set_window_position_safe(0, 0)
+                        bordered_fullscreen = True
+                    else:
+                        screen, resize_grace_frames = apply_window_resize(
+                            screen,
+                            windowed_size,
+                            ship_instance,
+                            map_selected,
+                            map_instance,
+                            resize_grace_frames
+                        )
+                        if previous_window_position is not None:
+                            set_window_position_safe(previous_window_position[0], previous_window_position[1])
+                        bordered_fullscreen = False
+                    ignore_resize_events = 2
+                elif event.type == pygame.VIDEORESIZE and not bordered_fullscreen:
+                    if ignore_resize_events > 0:
+                        ignore_resize_events -= 1
+                        continue
+                    resized_width = max(800, event.w)
+                    resized_height = max(450, event.h)
+                    windowed_size = (resized_width, resized_height)
+                    screen, resize_grace_frames = apply_window_resize(
+                        screen,
+                        windowed_size,
+                        ship_instance,
+                        map_selected,
+                        map_instance,
+                        resize_grace_frames
+                    )
 
             # -------------------------------------------------------------------------------- #
             # -------------------------------------------------------------------------------- #
@@ -345,7 +461,13 @@ def game_loop():
                     ship_instance.import_surface(screen) # Importing the collision surface to the ship instance for pixel color detection
                     ship_instance.update_thruster_inputs() # Update thruster inputs based on key presses
                     ship_instance.ship_rotate() # Update ship movement based on thruster inputs
-                    text_to_show, reason = ship_instance.move_ship(spirit_collision_group) # Move the ship based on current velocity and acceleration
+                    if resize_grace_frames > 0:
+                        resize_grace_frames -= 1
+                        ship_instance.velocity = vector(0, 0)
+                        ship_instance.acceleration_vector = vector(0, 0)
+                        text_to_show, reason = None, None
+                    else:
+                        text_to_show, reason = ship_instance.move_ship(spirit_collision_group) # Move the ship based on current velocity and acceleration
                     ship_instance.render_ship_maps() # Render the ship with updated rotation
                     game_state = ship_instance.check_game_state() # Check for game over or level completion
                     ship, ship_rect = ship_instance.get_rect() # Getting the ship image and rect for rendering

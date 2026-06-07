@@ -216,12 +216,17 @@ class TileMap:
                                 tile_sprite.grid_x + (self.tile_size[0] / 2),
                                 tile_sprite.grid_y + (self.tile_size[1] / 2)
                             )
-                            self.objective_instance = objectives_helper.create_objective(
-                                self.objective_definition["type"],
-                                (tile_sprite.grid_x, tile_sprite.grid_y),
-                                self.tile_size,
-                                self.duration_data
-                            )
+                            if self.objective_instance is None:
+                                self.objective_instance = objectives_helper.create_objective(
+                                    self.objective_definition["type"],
+                                    (tile_sprite.grid_x, tile_sprite.grid_y),
+                                    self.tile_size,
+                                    self.duration_data
+                                )
+                            else:
+                                self.objective_instance.size = self.tile_size
+                                self.objective_instance.set_position((tile_sprite.grid_x, tile_sprite.grid_y))
+                                self.objective_instance.rect.size = self.tile_size
                         self.tile_sprites.append(tile_sprite) # Adding the tile sprite to the list of tile sprites
                     else:
                         scaled_row.append(None)
@@ -269,3 +274,12 @@ class TileMap:
             if self.objective_instance is not None and not self.objective_instance.complete and self.objective_world_position is not None:
                 return self.objective_world_position
             return self.finish_world_position
+
+        def update_screen_size(self, new_width, new_height):
+            global screensize_x, screensize_y
+            screensize_x = int(new_width)
+            screensize_y = int(new_height)
+
+            self.tile_spacing = int(((self.sizing_factor * screensize_x) / 2) + ((self.sizing_factor * screensize_y) / 2))
+            self.tile_size = conf.map_tile_size
+            self.create_tiles()

@@ -116,6 +116,17 @@ class MainMenu:
             self.center_y = screensize_y // 2
             self.level_count = len(self.map_info)  # Get the number of available levels
             self.level_names = self.map_info.values()  # Get level names
+            self.explanation_lines = [
+                "How to play:",
+                "Use G, H, J, K, L to control thrusters.",
+                "Land safely on cyan start/finish pads.",
+                "Avoid red zones or you will crash.",
+                "Follow the top arrow to objective, then finish.",
+            ]
+
+        def update_screen_size(self, screen):
+            self.center_x = screen.get_width() // 2
+            self.center_y = screen.get_height() // 2
 
         def button_check_colision(self, mouse_pos, mouse_clicked, button_rect):
             if mouse_clicked and button_rect.collidepoint(mouse_pos):
@@ -123,14 +134,17 @@ class MainMenu:
             return False
 
         def main_menu(self, screen):
+            self.update_screen_size(screen)
             self.highscore_front = self.font.render(f"Highscore: {self.highscore}", True, (255, 255, 255), None) # Rendering the highscore text
             screen.blit(self.highscore_front, (10, 10)) # Blitting the highscore text to the screen
             
             # Render buttons
             levels_button_text = self.font.render("Levels", True, (255, 255, 255), None)
             levels_rect = pygame.Rect(self.center_x - levels_button_text.get_width() // 2, self.center_y - 50, levels_button_text.get_width(), levels_button_text.get_height())
+            explanation_button_text = self.font.render("Explanation", True, (255, 255, 255), None)
+            explanation_rect = pygame.Rect(self.center_x - explanation_button_text.get_width() // 2, self.center_y + 10, explanation_button_text.get_width(), explanation_button_text.get_height())
             quit_button_text = self.font.render("Quit", True, (255, 255, 255), None)
-            quit_rect = pygame.Rect(self.center_x - quit_button_text.get_width() // 2, self.center_y + 10, quit_button_text.get_width(), quit_button_text.get_height())
+            quit_rect = pygame.Rect(self.center_x - quit_button_text.get_width() // 2, self.center_y + 70, quit_button_text.get_width(), quit_button_text.get_height())
 
             # Get mouse position and click status
             mouse_pos = pygame.mouse.get_pos()
@@ -139,12 +153,15 @@ class MainMenu:
             # Check button collisions
             if self.button_check_colision(mouse_pos, mouse_clicked, levels_rect):
                 self.window = "map_selection"
+            elif self.button_check_colision(mouse_pos, mouse_clicked, explanation_rect):
+                self.window = "explanation"
             elif self.button_check_colision(mouse_pos, mouse_clicked, quit_rect):
                 pygame.quit()
                 exit()
 
             # Blit buttons to screen
             screen.blit(levels_button_text, (levels_rect.x, levels_rect.y))
+            screen.blit(explanation_button_text, (explanation_rect.x, explanation_rect.y))
             screen.blit(quit_button_text, (quit_rect.x, quit_rect.y))
 
         def main_menu_loop(self, screen):
@@ -154,6 +171,33 @@ class MainMenu:
             elif self.window == "map_selection": # Displaying the map selection menu
                 self.open_map_selection(screen)
                 return self.map_selected
+            elif self.window == "explanation":
+                self.explanation_menu(screen)
+
+        def explanation_menu(self, screen):
+            self.update_screen_size(screen)
+            mouse_pos = pygame.mouse.get_pos()
+            mouse_clicked = pygame.mouse.get_pressed()[0]
+
+            title_text = self.font.render("Explanation", True, (255, 255, 255), None)
+            screen.blit(title_text, (self.center_x - title_text.get_width() // 2, 40))
+
+            line_spacing = 40
+            start_y = 100
+            for index, text_line in enumerate(self.explanation_lines):
+                line_surface = self.font.render(text_line, True, (220, 220, 220), None)
+                screen.blit(line_surface, (self.center_x - line_surface.get_width() // 2, start_y + (index * line_spacing)))
+
+            back_text = self.font.render("Back", True, (255, 255, 255), None)
+            back_rect = pygame.Rect(self.center_x - back_text.get_width() // 2, self.center_y + 180, back_text.get_width(), back_text.get_height())
+
+            if back_rect.collidepoint(mouse_pos):
+                back_text = self.font.render("Back", True, HOVER_COLOR, None)
+
+            if self.button_check_colision(mouse_pos, mouse_clicked, back_rect):
+                self.window = "main_menu"
+
+            screen.blit(back_text, (back_rect.x, back_rect.y))
 
         def open_map_selection(self, screen):
             vertical_spacing = 30  # Consistent vertical spacing between elements
@@ -191,6 +235,7 @@ class MainMenu:
                 screen.blit(button_text, (10, button_y))
                 
         def map_loading_animation(self, screen):
+            self.update_screen_size(screen)
             loading_text = self.font.render("Loading...", True, (255, 255, 255), None)
             screen.fill((0, 0, 0)) # Filling the screen with black color to clear previous frame
             screen.blit(loading_text, (self.center_x - loading_text.get_width() // 2, self.center_y))  # Blit the loading text to the screen

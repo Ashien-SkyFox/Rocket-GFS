@@ -90,9 +90,10 @@ vector = pygame.math.Vector2
 debug_mode = True
 
 # screen size
-
-screensize_x = 1200
-screensize_y = 600
+pygame.display.init()
+display_info = pygame.display.Info()
+screensize_x = int(display_info.current_w * 0.75)
+screensize_y = int(display_info.current_h * 0.75)
 """
 Problems: If you would want to change the screen size you would have to change it in multiple places or else the pictures would not be in the right place
 Fixed: I created variables for the screen size and used them in the code with multiplications
