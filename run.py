@@ -236,16 +236,86 @@ import pygame # Importing the pygame library for game development
 import os # Importing the os library for file path operations
 import time # Importing the time library for time-related functions
 import math # Importing the math library for mathematical functions
+import json
 
 # ------------------------------------------------------------------------------ #
 
 ### json Imports ###
-# Placeholder for future json imports for highscore system
+HIGHSCORE_FILE = "highscore.json"
+
+
+def get_default_highscore_data():
+    return {
+        "total_points": 0,
+        "wins": 0,
+        "level_points": {}
+    }
+
+
+def load_highscore_data():
+    if not os.path.exists(HIGHSCORE_FILE):
+        return get_default_highscore_data()
+
+    try:
+        with open(HIGHSCORE_FILE, "r", encoding="utf-8") as json_file:
+            data = json.load(json_file)
+    except (OSError, json.JSONDecodeError, TypeError, ValueError):
+        return get_default_highscore_data()
+
+    if not isinstance(data, dict):
+        return get_default_highscore_data()
+
+    normalized = get_default_highscore_data()
+    normalized["total_points"] = int(data.get("total_points", 0)) if isinstance(data.get("total_points", 0), (int, float)) else 0
+    normalized["wins"] = int(data.get("wins", 0)) if isinstance(data.get("wins", 0), (int, float)) else 0
+    level_points = data.get("level_points", {})
+    if not isinstance(level_points, dict):
+        level_points = {}
+
+    normalized["level_points"] = {str(k): int(v) for k, v in level_points.items() if isinstance(v, (int, float))}
+    return normalized
+
+
+def save_highscore_data(highscore_data):
+    try:
+        with open(HIGHSCORE_FILE, "w", encoding="utf-8") as json_file:
+            json.dump(highscore_data, json_file, indent=4)
+    except OSError:
+        print("Failed to save highscore data.")
+
+
+def get_highscore_text(highscore_data):
+    total_points = int(highscore_data.get("total_points", 0))
+    return f"Total Points: {total_points}"
+
+
+def calculate_points_for_run(completion_time_seconds):
+    # Faster completion gives more points; minimum is 0 points.
+    return max(0, int(10000 - (completion_time_seconds * 100)))
+
+
+def update_highscore_for_win(highscore_data, level_number, completion_time_seconds):
+    if completion_time_seconds <= 0:
+        return False
+
+    points = calculate_points_for_run(completion_time_seconds)
+    changed = False
+    levels = highscore_data.setdefault("level_points", {})
+    level_key = str(level_number)
+    old_level_best = int(levels.get(level_key, 0))
+    if points > old_level_best:
+        levels[level_key] = points
+        changed = True
+
+    highscore_data["total_points"] = int(sum(int(v) for v in levels.values()))
+
+    highscore_data["wins"] = int(highscore_data.get("wins", 0)) + 1
+    return changed
 
 # ------------------------------------------------------------------------------ #
 # ------------------------------------------------------------------------------ #
 
-highscore = 0 #placeholder for highscore system
+highscore = "Total Points: 0"
 
 ## ------------------------------------------------------------------------------ #
 
@@ -346,6 +416,8 @@ def game_loop():
     pygame.display.set_caption("Rocket - v5.1.3") # Setting the window title
     pygame.init()
 
+    highscore_data = load_highscore_data()
+
     map_selected = 0 # 0 = main menu, -1 = map loaded
     display_info = pygame.display.Info()
     default_window_size = (max(800, int(display_info.current_w * 0.75)), max(450, int(display_info.current_h * 0.75)))
@@ -360,19 +432,26 @@ def game_loop():
     # -------------------------------------------------------------------------------- #
 
     map_data = levels.get_level_info() # Loading the level data from the levels module
-    main_menu_instance = mm.MainMenu(map_data, map_selected, highscore)
+    main_menu_instance = mm.MainMenu(
+        map_data,
+        map_selected,
+        get_highscore_text(highscore_data),
+        highscore_data.get("level_points", {})
+    )
     ship_instance = sh.Ship()
     running = True
     reset_ship = False
     delta_time = 0.
     resize_grace_frames = 0
     ignore_resize_events = 0
+    current_level = None
+    level_start_ticks = None
 
     # -------------------------------------------------------------------------------- #
     # -------------------------------------------------------------------------------- #
 
     def start_game_loop(running=running, map_selected=map_selected, reset_ship=reset_ship, ship_instance=ship_instance, main_menu_instance=main_menu_instance, delta_time=delta_time, map_data=map_data):
-        nonlocal screen, windowed_size, bordered_fullscreen, resize_grace_frames, ignore_resize_events, previous_window_position
+        nonlocal screen, windowed_size, bordered_fullscreen, resize_grace_frames, ignore_resize_events, previous_window_position, current_level, level_start_ticks
         map_instance = None
         while running:
             for event in pygame.event.get(): # Quiting the game loop if the window is closed
@@ -448,6 +527,8 @@ def game_loop():
                     ship_instance.position = spawn_position # Setting the ship position to the spawn position
                     map_instance.tile_group.draw(screen) # Drawing the tilemap on the screen
                     map_selected = -1 # Setting the value to -1 to indicate that a map has been selected
+                    current_level = map
+                    level_start_ticks = pygame.time.get_ticks()
                     start_select = 1 # Resetting the start select variable for the next time the main menu is shown
                     game_state = "running" # Setting the game state to running
 
@@ -490,9 +571,17 @@ def game_loop():
                             pygame.display.flip() # Updating the display to show the new frame
                             pygame.time.delay(1000) # Delay for a second before resetting
                             if game_state == "game over" or game_state == "Win":
+                                if game_state == "Win" and level_start_ticks is not None and current_level is not None:
+                                    completion_time_seconds = (pygame.time.get_ticks() - level_start_ticks) / 1000.0
+                                    update_highscore_for_win(highscore_data, current_level, completion_time_seconds)
+                                    save_highscore_data(highscore_data)
+                                    main_menu_instance.highscore = get_highscore_text(highscore_data)
+                                    main_menu_instance.level_scores = highscore_data.get("level_points", {})
                                 screen.fill((0, 0, 0)) # Filling the screen with black color to clear previous frame
                                 map_selected = 0 # Returning to main menu
                                 map = 0 # Resetting map variable
+                                current_level = None
+                                level_start_ticks = None
                                 reset_ship = True # Resetting the ship
                                 main_menu_instance.main_menu_reset() # Resetting the main menu instance
                         else:

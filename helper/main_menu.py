@@ -103,10 +103,11 @@ screensize_y = conf.screensize_y
 HOVER_COLOR = (255, 255, 0)
 
 class MainMenu:
-        def __init__(self, map_data, map_selected = 0, highscore = 0): # Initializing the main menu with map selection and highscore
+        def __init__(self, map_data, map_selected = 0, highscore = 0, level_scores = None): # Initializing the main menu with map selection and highscore
             self.map_data = map_data
             self.map_selected = map_selected
             self.highscore = highscore
+            self.level_scores = level_scores if isinstance(level_scores, dict) else {}
             self.window = "main_menu" # Setting the initial window to main menu
             self.font = pygame.font.Font(None, 36) # Creating a font object for rendering text
             self.map_info = self.map_data[0]  # Get level names for menu display
@@ -216,15 +217,17 @@ class MainMenu:
             # Dynamically create buttons for all available levels
             for level_num in range(1, self.level_count + 1):
                 level_name = list(self.level_names)[level_num - 1]  # Get level name from levels.py
+                level_points = int(self.level_scores.get(str(level_num), 0))
+                level_label = f"{level_num}. {level_name} [{level_points}]"
                 button_y = start_y + (level_num + 1) * vertical_spacing
                         
                 # Create button text and rectangle
-                button_text = self.font.render(f"{level_num}. {level_name}", True, (255, 255, 255), None)
+                button_text = self.font.render(level_label, True, (255, 255, 255), None)
                 button_rect = pygame.Rect(10, button_y, button_text.get_width(), button_text.get_height())
                         
                 # Check for hover effect
                 if button_rect.collidepoint(mouse_pos):
-                    button_text = self.font.render(f"{level_num}. {level_name}", True, HOVER_COLOR, None)
+                    button_text = self.font.render(level_label, True, HOVER_COLOR, None)
                         
                 # Check for collision using button_check_colision method
                 if self.button_check_colision(mouse_pos, mouse_clicked, button_rect):
