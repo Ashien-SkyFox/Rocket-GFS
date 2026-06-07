@@ -10,8 +10,8 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        run.py
 #  {[**Author**]}      Cutie Ashien
-#  {[**Version**]}     5.1.4
-#  {[**Date**]}        2026-05-31
+#  {[**Version**]}     6.0.0
+#  {[**Date**]}        2026-06-04
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -34,6 +34,14 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#  -v6.0.0: Full release of the game with all features and levels.
+#      - Added multiple levels with increasing difficulty and unique objectives.
+#      - Implemented a highscore system to track player performance across levels.
+#      - Added a main menu with level selection and highscore display.
+#      - Improved graphics and visual effects for a more immersive experience.
+#
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #  -v5.1.4: Winn condition fix.
 #      - Added a fix to the win condition check in the ship class to handle cases where there is no objective instance, allowing for levels without specific objectives to be completed successfully.
@@ -237,6 +245,7 @@ import os # Importing the os library for file path operations
 import time # Importing the time library for time-related functions
 import math # Importing the math library for mathematical functions
 import json
+import random
 
 # ------------------------------------------------------------------------------ #
 
@@ -410,10 +419,76 @@ def draw_navigation_arrow(screen, ship_position, target_position):
     pygame.draw.polygon(screen, (255, 230, 0), rotated_points)
     pygame.draw.circle(screen, (20, 20, 20), (int(arrow_origin.x), int(arrow_origin.y)), 16, 2)
 
+
+def load_star_background_surface():
+    try:
+        star_surface = pygame.image.load(conf.star_glitter_background).convert_alpha()
+        star_scale = float(getattr(conf, "background_star_scale", 1.0))
+        star_scale = max(0.05, min(2.0, star_scale))
+        scaled_size = (
+            max(1, int(star_surface.get_width() * star_scale)),
+            max(1, int(star_surface.get_height() * star_scale))
+        )
+        return pygame.transform.smoothscale(star_surface, scaled_size)
+    except (FileNotFoundError, pygame.error):
+        return None
+
+
+def build_random_starfield(star_surface, width, height):
+    if star_surface is None:
+        return None
+
+    world_width = max(width * 3, 1)
+    world_height = max(height * 3, 1)
+    base_count = max(80, int((width * height) / 12000))
+    stars = []
+    for _ in range(base_count):
+        stars.append((
+            random.uniform(0, world_width),
+            random.uniform(0, world_height),
+            random.uniform(0.45, 1.0)
+        ))
+
+    return {
+        "world_width": world_width,
+        "world_height": world_height,
+        "stars": stars
+    }
+
+
+def draw_moving_background(screen, star_surface, starfield_data, offset_x, offset_y):
+    if star_surface is None or starfield_data is None:
+        screen.fill((0, 0, 0))
+        return
+
+    world_width = starfield_data["world_width"]
+    world_height = starfield_data["world_height"]
+    stars = starfield_data["stars"]
+    if world_width <= 0 or world_height <= 0 or not stars:
+        screen.fill((0, 0, 0))
+        return
+
+    screen.fill((0, 0, 0))
+
+    for star_x, star_y, star_brightness in stars:
+        screen_x = (star_x - offset_x) % world_width
+        screen_y = (star_y - offset_y) % world_height
+
+        if screen_x > screensize_x or screen_y > screensize_y:
+            continue
+
+        alpha_min = int(getattr(conf, "background_star_alpha_min", 25))
+        alpha_max = int(getattr(conf, "background_star_alpha_max", 110))
+        alpha_min = max(0, min(255, alpha_min))
+        alpha_max = max(alpha_min, min(255, alpha_max))
+        star_alpha = alpha_min + int((alpha_max - alpha_min) * star_brightness)
+        star_surface.set_alpha(star_alpha)
+        screen.blit(star_surface, (screen_x, screen_y))
+
 ### Game Loop ###
 
 def game_loop():
-    pygame.display.set_caption("Rocket - v5.1.3") # Setting the window title
+    pygame.display.set_caption("Rocket - v6.0.0 (Full Release 1.0)") # Setting the window title
     pygame.init()
 
     highscore_data = load_highscore_data()
@@ -427,6 +502,8 @@ def game_loop():
     screen = create_window(default_window_size) # set the screen size
     apply_runtime_screen_size(*screen.get_size())
     clock = pygame.time.Clock() # Creating a clock object to manage the frame rate
+    star_background_surface = load_star_background_surface()
+    starfield_data = build_random_starfield(star_background_surface, screensize_x, screensize_y)
 
     # -------------------------------------------------------------------------------- #
     # -------------------------------------------------------------------------------- #
@@ -451,7 +528,7 @@ def game_loop():
     # -------------------------------------------------------------------------------- #
 
     def start_game_loop(running=running, map_selected=map_selected, reset_ship=reset_ship, ship_instance=ship_instance, main_menu_instance=main_menu_instance, delta_time=delta_time, map_data=map_data):
-        nonlocal screen, windowed_size, bordered_fullscreen, resize_grace_frames, ignore_resize_events, previous_window_position, current_level, level_start_ticks
+        nonlocal screen, windowed_size, bordered_fullscreen, resize_grace_frames, ignore_resize_events, previous_window_position, current_level, level_start_ticks, starfield_data
         map_instance = None
         while running:
             for event in pygame.event.get(): # Quiting the game loop if the window is closed
@@ -470,6 +547,7 @@ def game_loop():
                             map_instance,
                             resize_grace_frames
                         )
+                        starfield_data = build_random_starfield(star_background_surface, screensize_x, screensize_y)
                         set_window_position_safe(0, 0)
                         bordered_fullscreen = True
                     else:
@@ -481,6 +559,7 @@ def game_loop():
                             map_instance,
                             resize_grace_frames
                         )
+                        starfield_data = build_random_starfield(star_background_surface, screensize_x, screensize_y)
                         if previous_window_position is not None:
                             set_window_position_safe(previous_window_position[0], previous_window_position[1])
                         bordered_fullscreen = False
@@ -500,11 +579,20 @@ def game_loop():
                         map_instance,
                         resize_grace_frames
                     )
+                    starfield_data = build_random_starfield(star_background_surface, screensize_x, screensize_y)
 
             # -------------------------------------------------------------------------------- #
             # -------------------------------------------------------------------------------- #
 
-            screen.fill((0, 0, 0)) # Filling the screen with black color to clear previous frame
+            parallax_reference_position = vector(0, 0)
+            if map_selected == -1:
+                parallax_reference_position = ship_instance.get_ship_position()
+
+            parallax_factor = float(getattr(conf, "background_parallax_factor", 0.2))
+            # Positive parallax offsets make the tiled background move opposite to ship motion.
+            parallax_offset_x = parallax_reference_position.x * parallax_factor
+            parallax_offset_y = parallax_reference_position.y * parallax_factor
+            draw_moving_background(screen, star_background_surface, starfield_data, parallax_offset_x, parallax_offset_y)
 
             # -------------------------------------------------------------------------------- #
             # -------------------------------------------------------------------------------- #

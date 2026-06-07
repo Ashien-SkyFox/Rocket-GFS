@@ -10,8 +10,8 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        config.py
 #  {[**Author**]}      Cutie Ashien
-#  {[**Version**]}     5.1.3
-#  {[**Date**]}        2026-05-13
+#  {[**Version**]}     6.0.0
+#  {[**Date**]}        2026-06-04
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -22,6 +22,14 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#  -v6.0.0: Full release of the game with all features and levels.
+#      - Added multiple levels with increasing difficulty and unique objectives.
+#      - Implemented a highscore system to track player performance across levels.
+#      - Added a main menu with level selection and highscore display.
+#      - Improved graphics and visual effects for a more immersive experience.
+#
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #  - v5.1.3: Objective system update.
 #      - Half rework of objective system
@@ -168,3 +176,12 @@ wall_tile = r'pictures/tiles/Basic_wall.png' # Loading tile images
 start_point_tile = r'pictures/tiles/Start_point.png' # Loading tile images
 finish_point_tile = r'pictures/tiles/Finisch_point.png' # Loading tile images
 rocket_ship = r'pictures/Rocket - frontend.png' # Loading tile images
+star_glitter_background = r'pictures/Star_glitter.png' # Moving background texture
+
+# Background motion (pixels per second)
+background_scroll_speed_x = 24
+background_scroll_speed_y = 8
+background_parallax_factor = 0.2
+background_star_scale = 0.35
+background_star_alpha_min = 25
+background_star_alpha_max = 110

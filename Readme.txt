@@ -10,8 +10,8 @@
  {[**Project**]}     Rocket
  {[**File**]}        ////
  {[**Author**]}      Cutie Ashien
- {[**Version**]}     5.1.3
- {[**Date**]}        2026-05-18
+ {[**Version**]}     6.0.0
+ {[**Date**]}        2026-06-04
  {[**Python**]}      3.11.x
  {[**License**]}     MIT
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -34,6 +34,14 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  {[**Changelog**]}
+
+  -v6.0.0: Full release of the game with all features and levels.
+      - Added multiple levels with increasing difficulty and unique objectives.
+      - Implemented a highscore system to track player performance across levels.
+      - Added a main menu with level selection and highscore display.
+      - Improved graphics and visual effects for a more immersive experience.
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
   - v5.1.4: Winn condition fix.
       - Added a fix to the win condition check in the ship class to handle cases where there is no objective instance, allowing for levels without specific objectives to be completed successfully.

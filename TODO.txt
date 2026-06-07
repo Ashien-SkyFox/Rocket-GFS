@@ -10,23 +10,7 @@
 #################################################################################################################################################################################################################
 
 TODO
-    - new desinges (depends you need to ajust it)
-
-
-
-
-
-
-    - Arrow to next objective/finish
-    - Sounds
-
-
-
-
-
-
-    - highscore
-    - preventing player form spawining inside tile if a tile is above start.
+    - preventing player form spawining inside tile if a tile is above start. (not needed)
 
     
 ================================================================================================================================================================================================================
