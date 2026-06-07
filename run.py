@@ -246,6 +246,9 @@ import time # Importing the time library for time-related functions
 import math # Importing the math library for mathematical functions
 import json
 import random
+import traceback
+import datetime
+import sys
 
 # ------------------------------------------------------------------------------ #
 
@@ -707,7 +710,33 @@ def game_loop():
     start_game_loop()
     pygame.quit()
 
-game_loop()
+def write_crash_log(exc: BaseException):
+    """Write a timestamped crash log to the crashes/ folder."""
+    try:
+        base_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+        crash_dir = os.path.join(base_dir, "crashes")
+        os.makedirs(crash_dir, exist_ok=True)
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        crash_file = os.path.join(crash_dir, f"crash_{timestamp}.txt")
+        with open(crash_file, "w", encoding="utf-8") as f:
+            f.write(f"Rocket Crash Log\n")
+            f.write(f"Time: {timestamp}\n")
+            f.write(f"Python: {sys.version}\n")
+            f.write(f"Platform: {sys.platform}\n")
+            f.write("-" * 60 + "\n")
+            f.write(traceback.format_exc())
+        print(f"Crash log saved to: {crash_file}")
+    except Exception:
+        pass
+
+
+try:
+    game_loop()
+except (SystemExit, KeyboardInterrupt):
+    pass
+except Exception as _crash_exc:
+    write_crash_log(_crash_exc)
+    raise
 """
 Starting the game loop
 """

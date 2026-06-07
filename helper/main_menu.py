@@ -166,7 +166,7 @@ class MainMenu:
                 self.window = "explanation"
             elif self.button_check_colision(mouse_pos, mouse_clicked, quit_rect):
                 pygame.quit()
-                exit()
+                sys.exit(0)
 
             # Blit buttons to screen
             screen.blit(levels_button_text, (levels_rect.x, levels_rect.y))
