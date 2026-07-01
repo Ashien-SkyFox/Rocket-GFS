@@ -10,8 +10,8 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        run.py
 #  {[**Author**]}      Cutie Ashien
-#  {[**Version**]}     6.0.0
-#  {[**Date**]}        2026-06-04
+#  {[**Version**]}     6.1.0
+#  {[**Date**]}        2026-07-01
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -34,6 +34,12 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#  -v6.1.0: Thruster effects raw.
+#      - Integrated ship thruster effect rendering into the main gameplay draw loop.
+#      - Synced in-file documentation with the new five-thruster visual behavior.
+#
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #  -v6.0.0: Full release of the game with all features and levels.
 #      - Added multiple levels with increasing difficulty and unique objectives.
@@ -491,7 +497,7 @@ def draw_moving_background(screen, star_surface, starfield_data, offset_x, offse
 ### Game Loop ###
 
 def game_loop():
-    pygame.display.set_caption("Rocket - v6.0.0 (Full Release 1.0)") # Setting the window title
+    pygame.display.set_caption("Rocket - v6.1.0 (Thruster raw)") # Setting the window title
     pygame.init()
 
     highscore_data = load_highscore_data()
@@ -645,6 +651,7 @@ def game_loop():
                     ship, ship_rect = ship_instance.get_rect() # Getting the ship image and rect for rendering
                     if conf.debug_mode:
                         ship_instance.debug() # Starting the debug
+                    ship_instance.draw_thruster_effects(screen, ship_rect) # Draw thruster flames before blitting ship
                     screen.blit(ship, ship_rect) # Drawing the ship on the screen at the center position
                     navigation_target = map_instance.get_navigation_target_position()
                     draw_navigation_arrow(screen, position, navigation_target)

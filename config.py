@@ -10,8 +10,8 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        config.py
 #  {[**Author**]}      Cutie Ashien
-#  {[**Version**]}     6.0.0
-#  {[**Date**]}        2026-06-04
+#  {[**Version**]}     6.1.0
+#  {[**Date**]}        2026-07-01
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -22,6 +22,12 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#  -v6.1.0: Thruster effects raw.
+#      - Added configuration offsets for the five thruster nozzle positions.
+#      - Added/kept key mapping and ratio settings used by the raw thruster flame effects.
+#
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #  -v6.0.0: Full release of the game with all features and levels.
 #      - Added multiple levels with increasing difficulty and unique objectives.
@@ -185,3 +191,11 @@ background_parallax_factor = 0.2
 background_star_scale = 0.35
 background_star_alpha_min = 25
 background_star_alpha_max = 110
+
+# Thrusters
+# Thrusterlayout ofseet
+left_thruster_offset = vector(-0.35, 0.5)
+left_middle_thruster_offset = vector(-0.15, 0.5)
+middle_thruster_offset = vector(0, 0.5)
+right_middle_thruster_offset = vector(0.15, 0.5)
+right_thruster_offset = vector(0.35, 0.5)

@@ -10,8 +10,8 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        ship.py
 #  {[**Author**]}      Cutie Ashien
-#  {[**Version**]}     5.1.4
-#  {[**Date**]}        2026-05-31
+#  {[**Version**]}     6.1.0
+#  {[**Date**]}        2026-07-01
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -22,6 +22,13 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#  - v6.1.0: Thruster effects raw.
+#      - Added raw visual thruster flame effects for all five nozzles.
+#      - Added key-mapped comments for G/H/J/K/L thruster logic and placement.
+#      - Improved nozzle anchoring so flame positions remain stable while spinning.
+#
+# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #  - v5.1.4: Winn condition fix.
 #      - Added a fix to the win condition check in the ship class to handle cases where there is no objective instance, allowing for levels without specific objectives to be completed successfully.
@@ -222,6 +229,13 @@ class Ship:
             self.object_side_count = 0
             self.collision_side = None
             
+            # Thruster
+            self.left_thruster_offset = conf.left_thruster_offset
+            self.left_middle_thruster_offset = conf.left_middle_thruster_offset
+            self.middle_thruster_offset = conf.middle_thruster_offset
+            self.right_middle_thruster_offset = conf.right_middle_thruster_offset
+            self.right_thruster_offset = conf.right_thruster_offset
+
             # Other
             self.won_countdown_start = True
             self.win_condition_met = False
@@ -262,23 +276,95 @@ class Ship:
             self.input_thruster_inner_right = 0
             self.input_thruster_outer_right = 0
 
-            if keys[self.thruster_key_outer_left]: #Update thruster Outer Left
+            # Key mapping for thruster control:
+            # G = left (outer left), H = middle-left (inner left), J = middle,
+            # K = middle-right (inner right), L = right (outer right)
+
+            if keys[self.thruster_key_outer_left]: # G: left / outer-left thruster
                 self.input_thruster_outer_left = self.outer_thruster_ratio
 
-            if keys[self.thruster_key_inner_left]: #Update thruster Inner Left
+            if keys[self.thruster_key_inner_left]: # H: middle-left / inner-left thruster
                 self.input_thruster_inner_left = self.inner_thruster_ratio
 
-            if keys[self.thruster_key_middle]: #Update thruster Middle
+            if keys[self.thruster_key_middle]: # J: center thruster
                 self.input_thruster_middle = self.middle_thruster_ratio
 
-            if keys[self.thruster_key_inner_right]: #Update thruster Inner Right
+            if keys[self.thruster_key_inner_right]: # K: middle-right / inner-right thruster
                 self.input_thruster_inner_right = self.inner_thruster_ratio
 
-            if keys[self.thruster_key_outer_right]: #Update thruster Outer Right
+            if keys[self.thruster_key_outer_right]: # L: right / outer-right thruster
                 self.input_thruster_outer_right = self.outer_thruster_ratio
+
+        def draw_thruster_effects(self, surface, ship_rect):
+            # Draw simple flame effects for each active thruster around the ship's engine line.
+            if surface is None or ship_rect is None:
+                return
+
+            # When no thruster is active we can skip all effect calculations.
+            if (self.input_thruster_outer_left == 0 and
+                self.input_thruster_inner_left == 0 and
+                self.input_thruster_middle == 0 and
+                self.input_thruster_inner_right == 0 and
+                self.input_thruster_outer_right == 0):
+                return
+
+            center = vector(ship_rect.centerx, ship_rect.centery) # Center of the ship rect for positioning thruster effects
+            exhaust_direction = self.forward_direction # Calculate the exhaust direction based on the ship's forward direction
+            if exhaust_direction.length_squared() == 0: # If the forward direction is zero, calculate exhaust direction based on rotation angle
+                rad_angle = math.radians(self.rotate_angle - 90) # Convert angle to radians (remove inversion if not needed)
+                # Exhaust points opposite to acceleration (towards the engine side).
+                exhaust_direction = vector(math.cos(rad_angle), -math.sin(rad_angle)) # Calculate exhaust direction vector based on rotation angle
+            else:
+                exhaust_direction = exhaust_direction.normalize() # Normalize the exhaust direction vector to ensure consistent flame length regardless of ship speed
+
+            # Side vector is used to place the five thruster nozzles from left to right.
+            side_direction = vector(exhaust_direction.y, -exhaust_direction.x)
+
+            # Use the unrotated sprite size so nozzle anchors stay stable while rotating.
+            base_ship_width = self.ship_orginal.get_width()
+            base_ship_height = self.ship_orginal.get_height()
+            base_flame_length = base_ship_height * 0.30
+            flame_width = max(2, int(base_ship_width * 0.03))
+
+            # Nozzle offsets from left to right: outer-left, inner-left, middle, inner-right, outer-right.
+            thruster_layout = [
+                (self.left_thruster_offset, self.input_thruster_outer_left), # G: left thruster
+                (self.left_middle_thruster_offset, self.input_thruster_inner_left), # H: middle-left thruster
+                (self.middle_thruster_offset, self.input_thruster_middle), # J: center thruster
+                (self.right_middle_thruster_offset, self.input_thruster_inner_right), # K: middle-right thruster
+                (self.right_thruster_offset, self.input_thruster_outer_right), # L: right thruster
+            ]
+
+            # Flicker effect based on current frame time for a lightweight animated flame.
+            self.flicker = 0.96 + 0.26 * math.sin(pygame.time.get_ticks() * 0.03)
+
+            for local_offset, thruster_input in thruster_layout: # Iterate through each thruster's local offset and input value
+                if thruster_input <= 0:
+                    continue
+
+                # local_offset.x = left/right on ship body, local_offset.y = back/front along engine axis.
+                nozzle_center = (
+                    center
+                    + side_direction * (base_ship_width * local_offset.x)
+                    + exhaust_direction * (base_ship_height * local_offset.y)
+                )
+                flame_length = base_flame_length * (0.65 + thruster_input * 0.75) * self.flicker # Flame length scales with thruster input and flicker effect
+                tip = nozzle_center + exhaust_direction * flame_length # Calculate the tip of the flame based on nozzle center and flame length
+
+                # Outer flame shell.
+                outer_left = nozzle_center + side_direction * flame_width # Calculate the left edge of the flame based on nozzle center and flame width
+                outer_right = nozzle_center - side_direction * flame_width # Calculate the right edge of the flame based on nozzle center and flame width
+                pygame.draw.polygon(surface, (255, 120, 20), [outer_left, outer_right, tip]) # Draw the outer flame polygon with a bright orange color
+
+                # Inner hot core.
+                inner_tip = nozzle_center + exhaust_direction * (flame_length * 0.62) # Calculate the tip of the inner flame core based on nozzle center and scaled flame length
+                inner_left = nozzle_center + side_direction * (flame_width * 0.55) # Calculate the left edge of the inner flame core based on nozzle center and scaled flame width
+                inner_right = nozzle_center - side_direction * (flame_width * 0.55) # Calculate the right edge of the inner flame core based on nozzle center and scaled flame width
+                pygame.draw.polygon(surface, (255, 230, 120), [inner_left, inner_right, inner_tip])
 
         def ship_rotate(self):
             if self.rotation_lock == False: # Only update rotation if not locked by collision
+                # Right-side thrusters add clockwise torque, left-side thrusters add counter-clockwise torque.
                 speedup_rotate = (((self.input_thruster_outer_right * self.turn_outer_factor) + self.input_thruster_inner_right * self.turn_inner_factor) - (self.input_thruster_inner_left * self.turn_inner_factor + (self.input_thruster_outer_left * self.turn_outer_factor))) # Turning speed based on thruster input
                 self.rotate_angle %= 360  # Keep the angle within [0, 360) to prevent overflow
                 self.rotate_velocity += speedup_rotate * self.acceleration # Adding the speedup input multiplied by the acceleration to the rotate velocity
@@ -312,7 +398,8 @@ class Ship:
             rad_angle = math.radians(self.rotate_angle-90) # Convert angle to radians (remove inversion if not needed)
             self.forward_direction = vector(math.cos(rad_angle), -math.sin(rad_angle)) # Calculate forward direction vector
 
-            # Calculate total thrust from all thrusters
+                # Calculate forward thrust from all active thrusters (G + H + J + K + L).
+                # Negative sign keeps ship acceleration aligned with the intended forward direction.
             self.total_thrust = 0
             self.total_thrust = -(self.input_thruster_outer_left + self.input_thruster_inner_left +
                     self.input_thruster_middle +
@@ -569,7 +656,8 @@ class Ship:
                 "collision_start_side_count": self.collision_start_side_count if hasattr(self, 'collision_start_side_count') else "N/A",
                 "collision_end_side_count": self.collision_end_side_count if hasattr(self, 'collision_end_side_count') else "N/A",
                 "collision_unsafe_side_count": self.collision_unsafe_side_count if hasattr(self, 'collision_unsafe_side_count') else "N/A",
-                "collision_object_side_count": self.object_side_count if hasattr(self, 'object_side_count') else "N/A"
+                "collision_object_side_count": self.object_side_count if hasattr(self, 'object_side_count') else "N/A",
+                "Nozzel Flicker": self.flicker if hasattr(self, 'flicker') else "N/A",
                 }
             for argument, value in debug_values.items():
                 print(f"{argument}: {value}")

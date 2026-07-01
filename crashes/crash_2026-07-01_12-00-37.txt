@@ -1,0 +1,17 @@
+Rocket Crash Log
+Time: 2026-07-01_12-00-37
+Python: 3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]
+Platform: win32
+------------------------------------------------------------
+Traceback (most recent call last):
+  File "d:\Schule\TG12\Fächer\INFT\INFT (HL+BJ)\OOP\Projekt\Rocket-GFS\run.py", line 735, in <module>
+    game_loop()
+  File "d:\Schule\TG12\Fächer\INFT\INFT (HL+BJ)\OOP\Projekt\Rocket-GFS\run.py", line 711, in game_loop
+    start_game_loop()
+  File "d:\Schule\TG12\Fächer\INFT\INFT (HL+BJ)\OOP\Projekt\Rocket-GFS\run.py", line 648, in start_game_loop
+    ship_instance.draw_thruster_effects(screen, ship_rect) # Draw thruster flames before blitting ship
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Schule\TG12\Fächer\INFT\INFT (HL+BJ)\OOP\Projekt\Rocket-GFS\helper\..\helper\ship.py", line 344, in draw_thruster_effects
+    flame_length = base_flame_length * (0.65 + thruster_input * 0.75) * flicker # Flame length scales with thruster input and flicker effect
+                                                                        ^^^^^^^
+NameError: name 'flicker' is not defined. Did you mean: 'self.flicker'?
