@@ -101,7 +101,7 @@ vector = pygame.math.Vector2
 
 
 # Debug settings
-debug_mode = True
+debug_mode = False
 
 # screen size
 pygame.display.init()
