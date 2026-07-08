@@ -10,8 +10,8 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        run.py
 #  {[**Author**]}      Cutie Ashien
-#  {[**Version**]}     6.1.0
-#  {[**Date**]}        2026-07-01
+#  {[**Version**]}     6.1.1
+#  {[**Date**]}        2026-07-08
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -34,6 +34,13 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#  -v6.1.1: Runtime dependency bootstrap.
+#      - Added startup dependency check that installs missing runtime requirements automatically.
+#      - Ignored build-only dependency `pyinstaller` during runtime checks.
+#      - Kept game startup path unchanged after dependency verification.
+#
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #  -v6.1.0: Thruster effects raw.
 #      - Integrated ship thruster effect rendering into the main gameplay draw loop.
@@ -575,7 +582,7 @@ def draw_moving_background(screen, star_surface, starfield_data, offset_x, offse
 ### Game Loop ###
 
 def game_loop():
-    pygame.display.set_caption("Rocket - v6.1.0 (Thruster raw)") # Setting the window title
+    pygame.display.set_caption("Rocket - v6.1.1 (exe raw)") # Setting the window title
     pygame.init()
 
     highscore_data = load_highscore_data()
