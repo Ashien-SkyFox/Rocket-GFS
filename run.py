@@ -10,8 +10,8 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        run.py
 #  {[**Author**]}      Cutie Ashien
-#  {[**Version**]}     6.1.1
-#  {[**Date**]}        2026-07-08
+#  {[**Version**]}     7.0.0
+#  {[**Date**]}        2026-07-15
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -34,6 +34,12 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#  -v7.0.0: Mini map
+#       - Added a mini map to the game that shows the ship's position and orientation relative to the level.
+#       - The mini map is displayed in the top-right corner of the screen and updates in
+#
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #  -v6.1.1: Runtime dependency bootstrap.
 #      - Added startup dependency check that installs missing runtime requirements automatically.
@@ -582,7 +588,7 @@ def draw_moving_background(screen, star_surface, starfield_data, offset_x, offse
 ### Game Loop ###
 
 def game_loop():
-    pygame.display.set_caption("Rocket - v6.1.1 (exe raw)") # Setting the window title
+    pygame.display.set_caption("Rocket - v7 (Minimap)") # Setting the window title
     pygame.init()
 
     highscore_data = load_highscore_data()
