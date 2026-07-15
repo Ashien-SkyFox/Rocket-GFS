@@ -10,8 +10,8 @@
  {[**Project**]}     Rocket
  {[**File**]}        ////
  {[**Author**]}      Cutie Ashien
- {[**Version**]}     6.1.0
- {[**Date**]}        2026-07-01
+ {[**Version**]}     7.0.0
+ {[**Date**]}        2026-07-15
  {[**Python**]}      3.11.x
  {[**License**]}     MIT
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -34,6 +34,19 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  {[**Changelog**]}
+
+  -v7.0.0: Mini map
+       - Added a mini map to the game that shows the ship's position and orientation relative to the level.
+       - The mini map is displayed in the top-right corner of the screen and updates in
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+  -v6.1.1: Launcher and requirements bootstrap update.
+      - Added runtime dependency bootstrap in run.py to install missing requirements automatically.
+      - Added Rocket-GFS-Run.exe launcher that starts run.py through a real Python interpreter.
+      - Reduced startup loops by removing recursive EXE self-calls from the launcher flow.
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
   -v6.1.0: Thruster effects raw.
       - Added raw visual thruster flame effects for all five nozzles.

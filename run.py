@@ -10,8 +10,8 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        run.py
 #  {[**Author**]}      Cutie Ashien
-#  {[**Version**]}     6.1.0
-#  {[**Date**]}        2026-07-01
+#  {[**Version**]}     7.0.0
+#  {[**Date**]}        2026-07-15
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -34,6 +34,19 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#  -v7.0.0: Mini map
+#       - Added a mini map to the game that shows the ship's position and orientation relative to the level.
+#       - The mini map is displayed in the top-right corner of the screen and updates in
+#
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#
+#  -v6.1.1: Runtime dependency bootstrap.
+#      - Added startup dependency check that installs missing runtime requirements automatically.
+#      - Ignored build-only dependency `pyinstaller` during runtime checks.
+#      - Kept game startup path unchanged after dependency verification.
+#
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #  -v6.1.0: Thruster effects raw.
 #      - Integrated ship thruster effect rendering into the main gameplay draw loop.
@@ -234,6 +247,96 @@
 # Written by Cutie Ashien (https://github.com/Ashien-SkyFox)
 ##################################################################################################################################################################################################################
 
+### Library Imports ###
+from unittest import case # For match case statements
+import datetime
+from importlib import metadata as importlib_metadata
+import json
+import math # Importing the math library for mathematical functions
+import os # Importing the os library for file path operations
+import random
+import re
+import subprocess
+import sys
+import time # Importing the time library for time-related functions
+import traceback
+
+
+def get_runtime_base_dir():
+    if getattr(sys, "frozen", False):
+        return os.path.dirname(os.path.abspath(sys.executable))
+    return os.path.dirname(os.path.abspath(__file__))
+
+
+def read_runtime_requirements(requirements_path):
+    if not os.path.exists(requirements_path):
+        return []
+
+    requirements = []
+    with open(requirements_path, "r", encoding="utf-8") as req_file:
+        for raw_line in req_file:
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            requirements.append(line)
+    return requirements
+
+
+def extract_distribution_name(requirement_line):
+    base = requirement_line.split(";", 1)[0].strip()
+    base = re.split(r"[<>=!~]", base, maxsplit=1)[0].strip()
+    base = base.split("[", 1)[0].strip()
+    return base
+
+
+def find_missing_requirements(requirements):
+    missing = []
+    # pyinstaller is a build-time dependency and not required to run the game.
+    runtime_ignore = {"pyinstaller"}
+
+    for requirement in requirements:
+        package_name = extract_distribution_name(requirement)
+        if not package_name:
+            continue
+        if package_name.lower() in runtime_ignore:
+            continue
+        try:
+            importlib_metadata.version(package_name)
+        except importlib_metadata.PackageNotFoundError:
+            missing.append(requirement)
+    return missing
+
+
+def ensure_runtime_requirements_installed():
+    if getattr(sys, "frozen", False):
+        return
+
+    base_dir = get_runtime_base_dir()
+    requirements_path = os.path.join(base_dir, "requirements.txt")
+    requirements = read_runtime_requirements(requirements_path)
+    missing_requirements = find_missing_requirements(requirements)
+
+    if not missing_requirements:
+        return
+
+    print("Missing dependencies detected. Installing requirements...")
+    install_command = [
+        sys.executable,
+        "-m",
+        "pip",
+        "install",
+        "--only-binary=:all:",
+        "-r",
+        requirements_path,
+    ]
+    result = subprocess.run(install_command, check=False)
+    if result.returncode != 0:
+        raise RuntimeError("Failed to install missing requirements.")
+
+
+ensure_runtime_requirements_installed()
+
+
 ### File Imports ###
 import levels as levels # Importing levels module
 import config as conf # Importing config module
@@ -242,19 +345,7 @@ import helper.ship as sh # Importing ship helper module
 import helper.map as mp # Importing map helper module
 import helper.objectives as obj # Importing objectives module
 
-# ------------------------------------------------------------------------------ #
-
-### Library Imports ###
-from unittest import case # For match case statements
 import pygame # Importing the pygame library for game development
-import os # Importing the os library for file path operations
-import time # Importing the time library for time-related functions
-import math # Importing the math library for mathematical functions
-import json
-import random
-import traceback
-import datetime
-import sys
 
 # ------------------------------------------------------------------------------ #
 
@@ -497,7 +588,7 @@ def draw_moving_background(screen, star_surface, starfield_data, offset_x, offse
 ### Game Loop ###
 
 def game_loop():
-    pygame.display.set_caption("Rocket - v6.1.0 (Thruster raw)") # Setting the window title
+    pygame.display.set_caption("Rocket - v7 (Minimap)") # Setting the window title
     pygame.init()
 
     highscore_data = load_highscore_data()

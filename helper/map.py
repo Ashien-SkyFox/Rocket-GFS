@@ -10,8 +10,8 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        map.py
 #  {[**Author**]}      Cutie Ashien
-#  {[**Version**]}     6.0.0
-#  {[**Date**]}        2026-06-04
+#  {[**Version**]}     7.0.0
+#  {[**Date**]}        2026-07-15
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -22,6 +22,12 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#  -v7.0.0: Mini map
+#       - Added a mini map to the game that shows the ship's position and orientation relative to the level.
+#       - The mini map is displayed in the top-right corner of the screen and updates in
+#
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #  -v6.0.0: Full release of the game with all features and levels.
 #      - Added multiple levels with increasing difficulty and unique objectives.
@@ -169,6 +175,10 @@ class TileMap:
             self.map_data = levels.grapp_level(map_i) # Getting the map data for the selected map
             self.width = len(self.map_data[0]) * self.tile_size[0] # Calculating the width of the map based on the number of columns and tile size
             self.height = len(self.map_data) * self.tile_size[1] # Calculating the height of the map based on the number of rows and tile size
+            self.map_columns = len(self.map_data[0]) if self.map_data else 0
+            self.map_rows = len(self.map_data)
+            self.world_width = max(1, (self.map_columns - 1) * self.tile_spacing + self.tile_size[0])
+            self.world_height = max(1, (self.map_rows - 1) * self.tile_spacing + self.tile_size[1])
             self.tile_group = pygame.sprite.Group() # Group to hold all tile sprites
             self.objective_instance = None
             self.objective_world_position = None
@@ -179,6 +189,9 @@ class TileMap:
 
             # Map location Variables
             self.location = vector(0, 0) # Top-left corner of the map
+
+        def has_active_objective(self):
+            return self.objective_instance is not None and not isinstance(self.objective_instance, objectives_helper.NoneObjective)
         
         def tile_type_to_image(self, tile_type):
             match tile_type: # Mapping tile types to images
@@ -220,10 +233,6 @@ class TileMap:
                                 tile_sprite.grid_y + (self.tile_size[1] / 2)
                             )
                         if tile_type == 4 and self.objective_definition is not None:
-                            self.objective_world_position = vector(
-                                tile_sprite.grid_x + (self.tile_size[0] / 2),
-                                tile_sprite.grid_y + (self.tile_size[1] / 2)
-                            )
                             if self.objective_instance is None:
                                 self.objective_instance = objectives_helper.create_objective(
                                     self.objective_definition["type"],
@@ -235,6 +244,12 @@ class TileMap:
                                 self.objective_instance.size = self.tile_size
                                 self.objective_instance.set_position((tile_sprite.grid_x, tile_sprite.grid_y))
                                 self.objective_instance.rect.size = self.tile_size
+
+                            if self.has_active_objective():
+                                self.objective_world_position = vector(
+                                    tile_sprite.grid_x + (self.tile_size[0] / 2),
+                                    tile_sprite.grid_y + (self.tile_size[1] / 2)
+                                )
                         self.tile_sprites.append(tile_sprite) # Adding the tile sprite to the list of tile sprites
                     else:
                         scaled_row.append(None)
@@ -254,7 +269,84 @@ class TileMap:
                         y = row_index * self.tile_spacing + offset_y
                         screen.blit(tile_image, (x, y))
                         """Create a sprite group for all tiles in the map. Useful for collision detection."""
+            self.draw_minimap(screen, ship_position)
             return self.get_sprite_group(ship_position) # Return the group of tile sprites for collision detection
+
+        def draw_minimap(self, screen, ship_position):
+            if screen is None or self.map_columns == 0 or self.map_rows == 0:
+                return
+
+            # Fit the full world into the available minimap area while preserving aspect ratio.
+            max_minimap_width = max(conf.minimap_min_size, int(screensize_x * conf.minimap_max_width_ratio)) # Calculating the maximum width of the minimap based on screen size and configuration
+            max_minimap_height = max(conf.minimap_min_size, int(screensize_y * conf.minimap_max_height_ratio)) # Calculating the maximum height of the minimap based on screen size and configuration
+            scale = min(max_minimap_width / self.world_width, max_minimap_height / self.world_height) # Calculating the scale factor to fit the world into the minimap area while preserving aspect ratio
+            minimap_width = max(1, int(self.world_width * scale)) # Calculating the width of the minimap based on the world width and scale factor
+            minimap_height = max(1, int(self.world_height * scale)) # Calculating the height of the minimap based on the world height and scale factor
+
+            frame_width = minimap_width + (conf.minimap_padding * 2) # Calculating the width of the minimap frame including padding
+            frame_height = minimap_height + (conf.minimap_padding * 2) # Calculating the height of the minimap frame including padding
+            frame_x = screensize_x - frame_width - conf.minimap_margin # Calculating the x position of the minimap frame based on screen size and margin
+            frame_y = conf.minimap_margin # Calculating the y position of the minimap frame based on margin
+
+            # Draw the minimap background and border on a separate alpha surface.
+            minimap_surface = pygame.Surface((frame_width, frame_height), pygame.SRCALPHA) # Creating a new surface for the minimap with alpha transparency
+            """
+            SRCALPHA flag is used to create a surface that supports per-pixel alpha transparency. This allows us to draw the minimap with a transparent background and only show the tiles and ship marker.
+            """
+            # Draw the minimap background
+            pygame.draw.rect(
+                minimap_surface,
+                conf.minimap_background,
+                minimap_surface.get_rect(),
+                border_radius=conf.minimap_border_radius,
+            )
+            # Draw the minimap border
+            pygame.draw.rect(
+                minimap_surface,
+                conf.minimap_border_color,
+                minimap_surface.get_rect(),
+                width=2,
+                border_radius=conf.minimap_border_radius,
+            )
+
+            # Draw each tile on the minimap based on its type and position.
+            for row_index, row in enumerate(self.map_data):
+                for col_index, tile_type in enumerate(row):
+                    if tile_type == 0:
+                        continue
+                    if tile_type == 4 and not self.has_active_objective():
+                        continue
+
+                    # Round the projected tile edges instead of x/size separately so touching
+                    # world tiles stay flush on the minimap after scaling.
+                    tile_color = conf.minimap_tile_colors.get(tile_type, (255, 255, 255))
+                    tile_left = conf.minimap_padding + round(col_index * self.tile_spacing * scale)
+                    tile_top = conf.minimap_padding + round(row_index * self.tile_spacing * scale)
+                    tile_right = conf.minimap_padding + round((col_index * self.tile_spacing + self.tile_size[0]) * scale)
+                    tile_bottom = conf.minimap_padding + round((row_index * self.tile_spacing + self.tile_size[1]) * scale)
+                    tile_width = max(1, tile_right - tile_left)
+                    tile_height = max(1, tile_bottom - tile_top)
+                    pygame.draw.rect(
+                        minimap_surface,
+                        tile_color,
+                        pygame.Rect(tile_left, tile_top, tile_width, tile_height),
+                        border_radius=1,
+                    )
+
+            # Clamp the ship marker so it stays inside the minimap frame at all times.
+            ship_marker_x = conf.minimap_padding + int(ship_position.x * scale)
+            ship_marker_y = conf.minimap_padding + int(ship_position.y * scale)
+            ship_marker_x = max(conf.minimap_padding, min(conf.minimap_padding + minimap_width, ship_marker_x))
+            ship_marker_y = max(conf.minimap_padding, min(conf.minimap_padding + minimap_height, ship_marker_y))
+
+            pygame.draw.circle(
+                minimap_surface,
+                conf.minimap_ship_color,
+                (ship_marker_x, ship_marker_y),
+                max(3, int(4 * scale) + 2),
+            )
+
+            screen.blit(minimap_surface, (frame_x, frame_y)) # Blitting the minimap surface onto the main screen at the calculated position
         
         def get_sprite_group(self, ship_position):
             offset_x = self.location.x
@@ -290,4 +382,6 @@ class TileMap:
 
             self.tile_spacing = int(((self.sizing_factor * screensize_x) / 2) + ((self.sizing_factor * screensize_y) / 2))
             self.tile_size = conf.map_tile_size
+            self.world_width = max(1, (self.map_columns - 1) * self.tile_spacing + self.tile_size[0])
+            self.world_height = max(1, (self.map_rows - 1) * self.tile_spacing + self.tile_size[1])
             self.create_tiles()

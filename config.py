@@ -10,8 +10,8 @@
 #  {[**Project**]}     Rocket
 #  {[**File**]}        config.py
 #  {[**Author**]}      Cutie Ashien
-#  {[**Version**]}     6.1.0
-#  {[**Date**]}        2026-07-01
+#  {[**Version**]}     7.0.0
+#  {[**Date**]}        2026-07-15
 #  {[**Python**]}      3.11.x
 #  {[**License**]}     MIT
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -22,6 +22,12 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  {[**Changelog**]}
+#
+#  -v7.0.0: Mini map
+#       - Added a mini map to the game that shows the ship's position and orientation relative to the level.
+#       - The mini map is displayed in the top-right corner of the screen and updates in
+#
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #  -v6.1.0: Thruster effects raw.
 #      - Added configuration offsets for the five thruster nozzle positions.
@@ -160,6 +166,21 @@ valid_collision_colors = [unsafe_color, start_point_color, end_point_color] + ob
 
 map_sizing_factor = 0.3  # Sizing factor for the map tiles
 map_tile_size = (int((map_sizing_factor * screensize_x) + (map_sizing_factor * screensize_y)) / 2, int((map_sizing_factor * screensize_x) + (map_sizing_factor * screensize_y)) / 2) # Calculating the tile size based on screen size and sizing factor
+minimap_margin = 24
+minimap_padding = 10
+minimap_border_radius = 10
+minimap_max_width_ratio = 0.22
+minimap_max_height_ratio = 0.22
+minimap_min_size = 120
+minimap_background = (8, 12, 24, 185)
+minimap_border_color = (170, 215, 255)
+minimap_ship_color = (255, 255, 255)
+minimap_tile_colors = {
+    1: (255, 70, 70),
+    2: (0, 255, 233),
+    3: (255, 0, 229),
+    4: (255, 200, 0),
+}
 
 # -------------------------------------------------------------- #
 # Objective related
